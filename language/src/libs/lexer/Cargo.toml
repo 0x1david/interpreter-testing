@@ -1,6 +1,5 @@
-workspace = { members = ["src/libs/lexer"] }
 [package]
-name = "language"
+name = "lexer"
 version = "0.1.0"
 edition = "2021"
 
