@@ -1,5 +1,1 @@
-mod lexer;
-
-fn main() {
-    println!("Hello, world!");
-}
+pub mod lexer;
