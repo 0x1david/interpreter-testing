@@ -1,6 +1,6 @@
 
 #[derive(Debug, Clone)]
-pub enum Expression{
+pub enum Expr{
     Variable(Variable),
     This(This),
     Super(Super),
@@ -17,15 +17,15 @@ pub enum Expression{
 
 #[derive(Debug, Clone)]
 pub struct Binary {
-    pub lhs: Box<Expression>,
-    pub rhs: Box<Expression>,
+    pub lhs: Box<Expr>,
+    pub rhs: Box<Expr>,
     pub kind: Token,
     pub span: Span,
 }
 
 #[derive(Debug, Clone)]
 pub struct Unary {
-    pub value: Box<Expression>,
+    pub value: Box<Expr>,
     pub operator: Token,
     pub span: Span,
 }
@@ -33,28 +33,28 @@ pub struct Unary {
 #[derive(Debug, Clone)]
 pub struct Assign {
     pub variable: Token,
-    pub value: Box<Expression>,
+    pub value: Box<Expr>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone)]
 pub struct Call {
-    pub callee: Box<Expression>,
+    pub callee: Box<Expr>,
     pub parentheses: Token,
-    pub arguments: Vec<Box<Expression>>,
+    pub arguments: Vec<Box<Expr>>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone)]
 pub struct Get {
-    pub object: Box<Expression>,
+    pub object: Box<Expr>,
     pub name: Token,
     pub span: Span,
 }
 
 #[derive(Debug, Clone)]
 pub struct Grouping {
-    pub expression: Box<Expression>,
+    pub expression: Box<Expr>,
     pub span: Span,
 }
 
@@ -66,17 +66,17 @@ pub struct Literal {
 
 #[derive(Debug, Clone)]
 pub struct Logical {
-    pub lhs: Box<Expression>,
+    pub lhs: Box<Expr>,
     pub operator: Token,
-    pub rhs: Box<Expression>,
+    pub rhs: Box<Expr>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone)]
 pub struct Set {
-    pub object: Box<Expression>,
+    pub object: Box<Expr>,
     pub name: Token,
-    pub value: Box<Expression>,
+    pub value: Box<Expr>,
     pub span: Span,
 }
 

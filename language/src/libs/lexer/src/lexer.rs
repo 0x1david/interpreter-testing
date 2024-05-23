@@ -250,6 +250,7 @@ impl<'a> Lexer<'a> {
             self.start = self.current;
             self.scan_token();
         }
+        self.add_token(TokenKind::EOF)
     }
 }
 
@@ -417,12 +418,13 @@ mod tests {
         let source = "let x = 42;";
         let mut lexer = Lexer::new(source);
         lexer.scan_tokens();
-        assert_eq!(lexer.tokens.len(), 5);
+        assert_eq!(lexer.tokens.len(), 6);
         assert_eq!(lexer.tokens[0], TokenKind::Keyword(Keyword::Let));
         assert_eq!(lexer.tokens[1], TokenKind::Identifier("x".to_string()));
         assert_eq!(lexer.tokens[2], TokenKind::Equal);
         assert_eq!(lexer.tokens[3], TokenKind::Integer(42));
         assert_eq!(lexer.tokens[4], TokenKind::Semicolon);
+        assert_eq!(lexer.tokens[5], TokenKind::EOF);
     }
 
     #[test]
@@ -430,12 +432,13 @@ mod tests {
         let source = "let word = 'apples';";
         let mut lexer = Lexer::new(source);
         lexer.scan_tokens();
-        assert_eq!(lexer.tokens.len(), 5);
+        assert_eq!(lexer.tokens.len(), 6);
         assert_eq!(lexer.tokens[0], TokenKind::Keyword(Keyword::Let));
         assert_eq!(lexer.tokens[1], TokenKind::Identifier("word".to_string()));
         assert_eq!(lexer.tokens[2], TokenKind::Equal);
         assert_eq!(lexer.tokens[3], TokenKind::String("apples".to_string()));
         assert_eq!(lexer.tokens[4], TokenKind::Semicolon);
+        assert_eq!(lexer.tokens[5], TokenKind::EOF);
     }
 
     #[test]
@@ -516,6 +519,7 @@ mod tests {
             TokenKind::Integer(1),
             TokenKind::Semicolon,
             TokenKind::RightBrace,
+            TokenKind::EOF,
         ];
         for (i, token) in expected_tokens.iter().enumerate() {
             assert_eq!(&lexer.tokens[i], token);
