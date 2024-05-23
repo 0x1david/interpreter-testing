@@ -1,6 +1,6 @@
 
 #[derive(Debug, Clone)]
-enum Expression{
+pub enum Expression{
     Variable(Variable),
     This(This),
     Super(Super),
@@ -16,82 +16,99 @@ enum Expression{
 }
 
 #[derive(Debug, Clone)]
-struct Binary {
-    lhs: Box<Expression>,
-    rhs: Box<Expression>,
-    kind: Token,
+pub struct Binary {
+    pub lhs: Box<Expression>,
+    pub rhs: Box<Expression>,
+    pub kind: Token,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Unary {
-    value: Box<Expression>,
-    operator: Token,
+pub struct Unary {
+    pub value: Box<Expression>,
+    pub operator: Token,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Assign {
-    variable: Token,
-    value: Box<Expression>
+pub struct Assign {
+    pub variable: Token,
+    pub value: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Call {
-    callee: Box<Expression>,
-    parentheses: Token,
-    arguments: Vec<Box<Expression>>,
+pub struct Call {
+    pub callee: Box<Expression>,
+    pub parentheses: Token,
+    pub arguments: Vec<Box<Expression>>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Get {
-    object: Box<Expression>,
-    name: Token,
+pub struct Get {
+    pub object: Box<Expression>,
+    pub name: Token,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Grouping {
-    expression: Box<Expression>,
+pub struct Grouping {
+    pub expression: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Literal {
-    value: Object,
+pub struct Literal {
+    pub value: Object,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Logical {
-    lhs: Box<Expression>,
-    operator: Token,
-    rhs: Box<Expression>
+pub struct Logical {
+    pub lhs: Box<Expression>,
+    pub operator: Token,
+    pub rhs: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Set {
-    object: Box<Expression>,
-    name: Token,
-    value: Box<Expression>,
+pub struct Set {
+    pub object: Box<Expression>,
+    pub name: Token,
+    pub value: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Super {
-    keyword: Token,
-    method: Token,
+pub struct Super {
+    pub keyword: Token,
+    pub method: Token,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct This {
-    keyword: Token
+pub struct This {
+    pub keyword: Token,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
-struct Variable {
-    name: Token
+pub struct Variable {
+    pub name: Token,
+    pub span: Span,
 }
 
 
 
 #[derive(Debug, Clone)]
-enum Statement{}
+pub enum Statement{}
 #[derive(Debug, Clone)]
-enum Token{}
+pub enum Token{}
 #[derive(Debug, Clone)]
-enum Object{}
+pub enum Object{}
+#[derive(Debug, Clone)]
+pub struct Span{
+    pub start: usize,
+    pub end: usize,
+}
