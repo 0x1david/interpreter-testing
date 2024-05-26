@@ -1,5 +1,7 @@
-use crate::expression::{Expr, Token, Variable};
+use crate::expression::{Expr, Variable};
+use crate::token::Token;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum Statement {
     Block(Block),
@@ -13,6 +15,7 @@ pub enum Statement {
     Let(Let),
     While(While),
 }
+
 
 #[derive(Debug, Clone)]
 pub struct Block {
@@ -69,9 +72,8 @@ pub struct Let {
     pub initializer: Expr,
 }
 
-
 #[derive(Debug, Clone)]
-pub struct While{
+pub struct While {
     pub condition: Expression,
     pub body: Box<Statement>,
 }

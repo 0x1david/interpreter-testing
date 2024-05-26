@@ -2,10 +2,12 @@
 use anyhow::Result;
 use std::char;
 
+use crate::token::Token;
+
 #[derive(Debug)]
 pub struct Lexer<'a> {
     source: &'a str,
-    tokens: Vec<TokenKind>,
+    tokens: Vec<Token>,
     chars: std::iter::Peekable<std::str::Chars<'a>>,
 
     start: usize,
@@ -49,7 +51,8 @@ impl<'a> Lexer<'a> {
     /// - `token`: The token to be added.
     ///
     fn add_token(&mut self, token: TokenKind) {
-        self.tokens.push(token)
+        self.tokens
+            .push(Token::new(token, None, self.line, self.current))
     }
 
     /// Checks if the lexer has reached the end of the source input.
@@ -135,6 +138,10 @@ impl<'a> Lexer<'a> {
             }
             self.advance();
         }
+    }
+
+    pub fn get_all_tokens(self) -> Vec<Token> {
+        self.tokens
     }
 
     /// Scans the next token from the source input and adds it to the list of tokens.
@@ -228,7 +235,7 @@ impl<'a> Lexer<'a> {
             }
             c if c.is_alphabetic() => {
                 let letter = c.to_string();
-                let string = self.collect_until(|c| !c.is_alphanumeric() &&  c !='_');
+                let string = self.collect_until(|c| !c.is_alphanumeric() && c != '_');
                 let string = letter + &string;
 
                 let keyword = Keyword::from_word(&string);
@@ -254,9 +261,9 @@ impl<'a> Lexer<'a> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 /// Represents all current keywords in the source language.
-enum Keyword {
+pub enum Keyword {
     And,
     Class,
     Else,
@@ -309,9 +316,9 @@ impl Keyword {
 }
 
 #[allow(clippy::upper_case_acronyms)]
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 /// Represents the current kinds of tokens that can be found in the source language.
-enum TokenKind {
+pub(crate) enum TokenKind {
     LeftParen,
     RightParen,
     LeftBrace,
@@ -341,6 +348,39 @@ enum TokenKind {
     Integer(i64),
     UnrecognizedToken,
     EOF,
+}
+
+impl TokenKind {
+    pub fn keyword(&self) -> Option<&Keyword> {
+        match self {
+            TokenKind::Keyword(kw) => Some(&kw),
+            _ => None
+        }
+    }
+    pub fn string(&self) -> Option<&str> {
+        match self {
+            TokenKind::String(s) => Some(&s),
+            _ => None
+        }
+    }
+    pub fn identifier(&self) -> Option<&str> {
+        match self {
+            TokenKind::Identifier(id) => Some(&id),
+            _ => None
+        }
+    }
+    pub fn float(&self) -> Option<f64> {
+        match self {
+            TokenKind::Float(f) => Some(*f),
+            _ => None
+        }
+    }
+    pub fn integer(&self) -> Option<i64> {
+        match self {
+            TokenKind::Integer(i) => Some(*i),
+            _ => None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -406,7 +446,7 @@ mod tests {
         lexer.scan_token();
         assert_eq!(lexer.tokens.len(), 1);
 
-        if let TokenKind::Keyword(ref id) = lexer.tokens[0] {
+        if let TokenKind::Keyword(ref id) = lexer.tokens[0].ttype {
             assert_eq!(id, &Keyword::Let);
         } else {
             panic!("Expected a Keyword token.");
@@ -419,12 +459,15 @@ mod tests {
         let mut lexer = Lexer::new(source);
         lexer.scan_tokens();
         assert_eq!(lexer.tokens.len(), 6);
-        assert_eq!(lexer.tokens[0], TokenKind::Keyword(Keyword::Let));
-        assert_eq!(lexer.tokens[1], TokenKind::Identifier("x".to_string()));
-        assert_eq!(lexer.tokens[2], TokenKind::Equal);
-        assert_eq!(lexer.tokens[3], TokenKind::Integer(42));
-        assert_eq!(lexer.tokens[4], TokenKind::Semicolon);
-        assert_eq!(lexer.tokens[5], TokenKind::EOF);
+        assert_eq!(lexer.tokens[0].ttype, TokenKind::Keyword(Keyword::Let));
+        assert_eq!(
+            lexer.tokens[1].ttype,
+            TokenKind::Identifier("x".to_string())
+        );
+        assert_eq!(lexer.tokens[2].ttype, TokenKind::Equal);
+        assert_eq!(lexer.tokens[3].ttype, TokenKind::Integer(42));
+        assert_eq!(lexer.tokens[4].ttype, TokenKind::Semicolon);
+        assert_eq!(lexer.tokens[5].ttype, TokenKind::EOF);
     }
 
     #[test]
@@ -433,12 +476,18 @@ mod tests {
         let mut lexer = Lexer::new(source);
         lexer.scan_tokens();
         assert_eq!(lexer.tokens.len(), 6);
-        assert_eq!(lexer.tokens[0], TokenKind::Keyword(Keyword::Let));
-        assert_eq!(lexer.tokens[1], TokenKind::Identifier("word".to_string()));
-        assert_eq!(lexer.tokens[2], TokenKind::Equal);
-        assert_eq!(lexer.tokens[3], TokenKind::String("apples".to_string()));
-        assert_eq!(lexer.tokens[4], TokenKind::Semicolon);
-        assert_eq!(lexer.tokens[5], TokenKind::EOF);
+        assert_eq!(lexer.tokens[0].ttype, TokenKind::Keyword(Keyword::Let));
+        assert_eq!(
+            lexer.tokens[1].ttype,
+            TokenKind::Identifier("word".to_string())
+        );
+        assert_eq!(lexer.tokens[2].ttype, TokenKind::Equal);
+        assert_eq!(
+            lexer.tokens[3].ttype,
+            TokenKind::String("apples".to_string())
+        );
+        assert_eq!(lexer.tokens[4].ttype, TokenKind::Semicolon);
+        assert_eq!(lexer.tokens[5].ttype, TokenKind::EOF);
     }
 
     #[test]
@@ -522,7 +571,7 @@ mod tests {
             TokenKind::EOF,
         ];
         for (i, token) in expected_tokens.iter().enumerate() {
-            assert_eq!(&lexer.tokens[i], token);
+            assert_eq!(&lexer.tokens[i].ttype, token);
         }
     }
 }
