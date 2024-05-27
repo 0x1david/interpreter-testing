@@ -51,8 +51,7 @@ impl<'a> Lexer<'a> {
     /// - `token`: The token to be added.
     ///
     fn add_token(&mut self, token: TokenKind) {
-        self.tokens
-            .push(Token::new(token, None, self.line, self.current))
+        self.tokens.push(Token::new(token, None, self.line))
     }
 
     /// Checks if the lexer has reached the end of the source input.
@@ -354,31 +353,31 @@ impl TokenKind {
     pub fn keyword(&self) -> Option<&Keyword> {
         match self {
             TokenKind::Keyword(kw) => Some(&kw),
-            _ => None
+            _ => None,
         }
     }
     pub fn string(&self) -> Option<&str> {
         match self {
             TokenKind::String(s) => Some(&s),
-            _ => None
+            _ => None,
         }
     }
     pub fn identifier(&self) -> Option<&str> {
         match self {
             TokenKind::Identifier(id) => Some(&id),
-            _ => None
+            _ => None,
         }
     }
     pub fn float(&self) -> Option<f64> {
         match self {
             TokenKind::Float(f) => Some(*f),
-            _ => None
+            _ => None,
         }
     }
     pub fn integer(&self) -> Option<i64> {
         match self {
             TokenKind::Integer(i) => Some(*i),
-            _ => None
+            _ => None,
         }
     }
 }

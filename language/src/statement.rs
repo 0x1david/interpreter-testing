@@ -16,7 +16,6 @@ pub enum Statement {
     While(While),
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Block {
     pub statements: Vec<Statement>,

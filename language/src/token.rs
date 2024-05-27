@@ -3,48 +3,48 @@ use crate::{expression::Literal, lexer::TokenKind};
 #[derive(Debug, Clone)]
 pub struct Token {
     pub ttype: TokenKind,
-    literal: Option<Literal>,
-    line: usize,
-    column: usize,
+    pub literal: Option<Literal>,
+    pub span: Span,
+    pub line: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct Span {
+    start: usize,
+    end: usize,
+}
+
+impl Span {
+    pub fn new(start: usize, end: usize) -> Self {
+        Self { start, end }
+    }
 }
 
 impl Token {
-    pub fn new(ttype: TokenKind, literal: Option<Literal>, line: usize, column: usize) -> Self {
+    pub fn new(ttype: TokenKind, literal: Option<Literal>, line: usize) -> Self {
         Self {
             ttype,
             literal,
             line,
-            column,
+            span: Span { start: 0, end: 0 },
         }
     }
     pub fn equality(&self) -> bool {
-        match &self.ttype {
-            TokenKind::EqualEqual | TokenKind::BangEqual => true,
-            _ => false
-        }
+        matches!(&self.ttype, TokenKind::EqualEqual | TokenKind::BangEqual)
     }
     pub fn comparison(&self) -> bool {
-        match &self.ttype {
-            TokenKind::Greater | TokenKind::GreaterEqual | TokenKind::Less | TokenKind::LessEqual => true,
-            _ => false
-        }
+        matches!(
+            &self.ttype,
+            TokenKind::Greater | TokenKind::GreaterEqual | TokenKind::Less | TokenKind::LessEqual
+        )
     }
     pub fn term(&self) -> bool {
-        match &self.ttype {
-            TokenKind::Plus | TokenKind::Minus => true,
-            _ => false
-        }
+        matches!(&self.ttype, TokenKind::Plus | TokenKind::Minus)
     }
     pub fn factor(&self) -> bool {
-        match &self.ttype {
-            TokenKind::Star | TokenKind::Slash => true,
-            _ => false
-        }
+        matches!(&self.ttype, TokenKind::Star | TokenKind::Slash)
     }
     pub fn unary(&self) -> bool {
-        match &self.ttype {
-            TokenKind::Bang | TokenKind::Minus => true,
-            _ => false
-        }
+        matches!(&self.ttype, TokenKind::Bang | TokenKind::Minus)
     }
 }
