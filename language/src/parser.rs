@@ -89,7 +89,8 @@ impl Parser {
     // passed type)
     pub fn consume(&mut self) -> &Token {
         self.step();
-        &self.tokens[self.current]
+        let tik = self.previous();
+        tik
     }
 
     /// Checks if the parser has reached the end of the token list.
@@ -102,8 +103,11 @@ impl Parser {
 
     /// Parses the tokens into a list of statements.
     pub fn parse(&mut self) {
+        println!("now parsing");
         while !self.is_at_end() {
-            self.parse_expression();
+            println!("Parse next");
+            println!("{:?}", self.parse_expression());
+            self.step();
         }
     }
     /// Returns the type of the current token.
@@ -115,3 +119,5 @@ impl Parser {
         &self.tokens[self.current].ttype
     }
 }
+
+
