@@ -100,13 +100,23 @@ impl Parser {
     ///
     /// # Panics
     /// Panics if an invalid primary expression is encountered.
+    // TODO: This code is hideous and duplicative, so rewrite later
     pub fn parse_primary(&mut self) -> Option<Expr> {
         dbg!("Parsing primary {}", &self.peek().ttype);
         if let Some(kw) = self.token_type().keyword() {
             match kw {
-                Keyword::True => return Some(Expr::literal(Object::True)),
-                Keyword::False => return Some(Expr::literal(Object::False)),
-                Keyword::Null => return Some(Expr::literal(Object::Null)),
+                Keyword::True => {
+                    self.step();
+                    return Some(Expr::literal(Object::True));
+                }
+                Keyword::False => {
+                    self.step();
+                    return Some(Expr::literal(Object::False))
+                }
+                Keyword::Null => {
+                    self.step();
+                    return Some(Expr::literal(Object::Null))
+                }
                 _ => return None 
             }
         };
