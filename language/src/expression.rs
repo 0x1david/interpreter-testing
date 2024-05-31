@@ -173,6 +173,20 @@ impl Expr {
     ///
     /// A new `Expr::Binary` instance.
     fn binary(lhs: Expr, operator: Token, rhs: Expr) -> Self {
+        let operator = match operator.ttype {
+            TokenKind::Minus => BinaryOpToken::Minus,
+            TokenKind::Plus => BinaryOpToken::Plus,
+            TokenKind::Star => BinaryOpToken::Star,
+            TokenKind::Slash => BinaryOpToken::Slash,
+            TokenKind::GreaterEqual => BinaryOpToken::GreaterEqual,
+            TokenKind::Greater => BinaryOpToken::Greater,
+            TokenKind::LessEqual => BinaryOpToken::LessEqual,
+            TokenKind::Less => BinaryOpToken::Less,
+            TokenKind::EqualEqual => BinaryOpToken::EqualEqual,
+            TokenKind::BangEqual => BinaryOpToken::NotEqual,
+            _ => panic!("Parsing error found incorrect value as a binary operator {:?}.", operator.ttype)
+        };
+
         let b = Binary {
             lhs: Box::new(lhs),
             operator,
@@ -364,7 +378,21 @@ impl Expr {
 pub struct Binary {
     pub lhs: Box<Expr>,
     pub rhs: Box<Expr>,
-    pub operator: Token,
+    pub operator: BinaryOpToken,
+}
+
+#[derive(Debug, Clone)]
+pub enum BinaryOpToken {
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    GreaterEqual,
+    Greater,
+    LessEqual,
+    Less,
+    EqualEqual,
+    NotEqual
 }
 
 #[derive(Debug, Clone)]
