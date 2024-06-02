@@ -33,8 +33,14 @@ impl Interpreter {
         unimplemented!()
     }
 
-    pub fn interpret_expr<Exp: Deref<Target = Expr>>(e: Exp) -> Result {
-        unimplemented!()
+    pub fn interpret_expr(e: Expr) -> std::result::Result<Value, String> {
+        let value = match e {
+            Expr::Literal(expr) => Self::interpret_literal(expr),
+            Expr::Binary(expr) => Self::interpret_binary(expr)?,
+            Expr::Unary(expr) => Self::interpret_unary(expr)?,
+            _ => return Err("Unimplemented expression type".to_string())
+        };
+        Ok(value)
     }
 
     pub fn interpret_literal(e: Literal) -> Value {
@@ -48,8 +54,8 @@ impl Interpreter {
         }
     }
     pub fn interpret_binary(e: Binary) -> Result {
-        let lhs = Self::interpret_expr(e.lhs)?;
-        let rhs = Self::interpret_expr(e.rhs)?;
+        let lhs = Self::interpret_expr(*e.lhs)?;
+        let rhs = Self::interpret_expr(*e.rhs)?;
 
         match (&lhs, &e.operator, &rhs) {
             (Value::String(s1), BinaryOpToken::Plus, Value::String(s2)) => {
@@ -91,8 +97,8 @@ impl Interpreter {
             )),
         }
     }
-    fn interpret_unary(self, e: Unary) -> Result {
-        let rhs = Self::interpret_expr(e.value)?;
+    fn interpret_unary(e: Unary) -> Result {
+        let rhs = Self::interpret_expr(*e.value)?;
         let operator = e.operator;
 
         match (&operator, &rhs) {

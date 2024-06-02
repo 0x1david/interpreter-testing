@@ -7,7 +7,7 @@ use crate::token::Token;
 #[derive(Debug)]
 pub struct Lexer<'a> {
     source: &'a str,
-    tokens: Vec<Token>,
+    pub tokens: Vec<Token>,
     chars: std::iter::Peekable<std::str::Chars<'a>>,
 
     start: usize,
@@ -35,7 +35,7 @@ impl<'a> Lexer<'a> {
     ///
     /// # Returns
     /// - A `Lexer` instance.
-    fn new(source: &'a str) -> Self {
+    pub fn new(source: &'a str) -> Self {
         Self {
             chars: source.chars().peekable(),
             source,
@@ -251,7 +251,7 @@ impl<'a> Lexer<'a> {
     ///
     /// This function repeatedly calls `scan_token` to process each token in the input source until the end of the source is reached.
     ///
-    fn scan_tokens(&mut self) {
+    pub fn scan_tokens(&mut self) {
         while !self.is_at_end() {
             self.start = self.current;
             self.scan_token();

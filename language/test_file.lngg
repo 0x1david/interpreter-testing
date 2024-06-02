@@ -1,0 +1,14 @@
+362 + 439 * 88 + 8 * 9 == 39066 
+//let x = 42;
+//let y = 3.22;
+//let message = "Hello, World!";
+//let char_literal = 'c';
+//const MAX = 100;
+//if x > 10 {
+//    println("x is greater than 10");
+//} else {
+//    println("x is 10 or less");
+//}
+//while y < MAX {
+//    y = y + 1;
+//}
