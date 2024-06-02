@@ -119,5 +119,3 @@ impl Parser {
         &self.tokens[self.current].ttype
     }
 }
-
-

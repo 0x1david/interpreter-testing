@@ -1,3 +1,5 @@
+use std::{fmt::Display, ops::Neg};
+
 use crate::{
     lexer::{Keyword, TokenKind},
     parser::Parser,
@@ -11,7 +13,8 @@ impl Parser {
     /// An `Expr` representing the parsed expression.
     pub fn parse_expression(&mut self) -> Expr {
         dbg!("Parsing exp: ", &self.peek().ttype);
-        self.parse_equality().expect("After finishing, expression should be parsed")
+        self.parse_equality()
+            .expect("After finishing, expression should be parsed")
     }
     /// Parses equality expressions (`==`, `!=`) or any lower priority expression.
     ///
@@ -61,7 +64,6 @@ impl Parser {
             expression = Expr::binary(expression, operator, rhs)
         }
         Some(expression)
-
     }
     /// Parses factor expressions (`*`, `/`) or any lower priority expression.
     ///
@@ -86,7 +88,11 @@ impl Parser {
         dbg!("Parsing unary: ", &self.peek().ttype);
         if self.peek().unary() {
             self.step();
-            let operator = self.previous().clone();
+            let operator = match self.previous().ttype {
+                TokenKind::Minus => UnaryOpToken::Minus,
+                TokenKind::Bang => UnaryOpToken::Bang,
+                _ => panic!("Not a valid expression")
+            };
             let rhs = self.parse_unary()?;
             return Some(Expr::unary(operator, rhs));
         }
@@ -111,13 +117,13 @@ impl Parser {
                 }
                 Keyword::False => {
                     self.step();
-                    return Some(Expr::literal(Object::False))
+                    return Some(Expr::literal(Object::False));
                 }
                 Keyword::Null => {
                     self.step();
-                    return Some(Expr::literal(Object::Null))
+                    return Some(Expr::literal(Object::Null));
                 }
-                _ => return None 
+                _ => return None,
             }
         };
         if let Some(i) = self.token_type().integer() {
@@ -184,7 +190,10 @@ impl Expr {
             TokenKind::Less => BinaryOpToken::Less,
             TokenKind::EqualEqual => BinaryOpToken::EqualEqual,
             TokenKind::BangEqual => BinaryOpToken::NotEqual,
-            _ => panic!("Parsing error found incorrect value as a binary operator {:?}.", operator.ttype)
+            _ => panic!(
+                "Parsing error found incorrect value as a binary operator {:?}.",
+                operator.ttype
+            ),
         };
 
         let b = Binary {
@@ -204,7 +213,7 @@ impl Expr {
     /// # Returns
     ///
     /// A new `Expr::Unary` instance.
-    fn unary(operator: Token, value: Expr) -> Self {
+    fn unary(operator: UnaryOpToken, value: Expr) -> Self {
         let u = Unary {
             operator,
             value: Box::new(value),
@@ -392,14 +401,47 @@ pub enum BinaryOpToken {
     LessEqual,
     Less,
     EqualEqual,
-    NotEqual
+    NotEqual,
+}
+
+impl Display for BinaryOpToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Plus => write!(f, "Plus"),
+            Self::Minus => write!(f, "Minus"),
+            Self::Star => write!(f, "Star"),
+            Self::Slash => write!(f, "Slash"),
+            Self::GreaterEqual => write!(f, "GreaterEqual"),
+            Self::Greater => write!(f, "Greater"),
+            Self::LessEqual => write!(f, "LessEqual"),
+            Self::Less => write!(f, "Less"),
+            Self::EqualEqual => write!(f, "EqualEqual"),
+            Self::NotEqual => write!(f, "NotEqual"),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct Unary {
     pub value: Box<Expr>,
-    pub operator: Token,
+    pub operator: UnaryOpToken,
 }
+
+#[derive(Debug, Clone)]
+pub enum UnaryOpToken {
+    Minus,
+    Bang,
+}
+
+impl Display for UnaryOpToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Minus => write!(f, "Minus"),
+            Self::Bang=> write!(f, "Bang"),
+        }
+    }
+}
+
 
 #[derive(Debug, Clone)]
 pub struct Assign {
