@@ -1,10 +1,12 @@
 #![allow(dead_code)]
-use std::{fmt::Display, ops::{Deref, Neg}};
+use std::{
+    fmt::Display,
+    ops::{Deref, Neg},
+};
 
 use crate::expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken};
 
 type Result = std::result::Result<Value, String>;
-
 
 pub enum Value {
     String(String),
@@ -38,7 +40,7 @@ impl Interpreter {
             Expr::Literal(expr) => Self::interpret_literal(expr),
             Expr::Binary(expr) => Self::interpret_binary(expr)?,
             Expr::Unary(expr) => Self::interpret_unary(expr)?,
-            _ => return Err("Unimplemented expression type".to_string())
+            _ => return Err("Unimplemented expression type".to_string()),
         };
         Ok(value)
     }

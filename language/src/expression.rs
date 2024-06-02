@@ -91,7 +91,7 @@ impl Parser {
             let operator = match self.previous().ttype {
                 TokenKind::Minus => UnaryOpToken::Minus,
                 TokenKind::Bang => UnaryOpToken::Bang,
-                _ => panic!("Not a valid expression")
+                _ => panic!("Not a valid expression"),
             };
             let rhs = self.parse_unary()?;
             return Some(Expr::unary(operator, rhs));
@@ -437,11 +437,10 @@ impl Display for UnaryOpToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Minus => write!(f, "Minus"),
-            Self::Bang=> write!(f, "Bang"),
+            Self::Bang => write!(f, "Bang"),
         }
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Assign {

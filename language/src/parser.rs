@@ -1,5 +1,9 @@
 use crate::{
-    expression::Expr, interpreter::{self, Interpreter}, lexer::{Lexer, TokenKind}, statement::{Expression, Statement}, token::Token
+    expression::Expr,
+    interpreter::{self, Interpreter},
+    lexer::{Lexer, TokenKind},
+    statement::{Expression, Statement},
+    token::Token,
 };
 
 /// The `Parser` struct is responsible for parsing a sequence of tokens into a syntax tree.
@@ -99,15 +103,18 @@ impl Parser {
     }
 
     /// Parses the tokens into a list of statements.
-    pub fn parse(&mut self){
+    pub fn parse(&mut self) {
         println!("now parsing");
         while !self.is_at_end() {
             let exp = self.parse_expression();
             let printr_expr = exp.clone();
             println!("Parse next");
             let interpreted_exp = Interpreter::interpret_expr(exp);
-            println!("Value of interpreted expression:{:?} \n is {}", printr_expr, &interpreted_exp.unwrap());
-
+            println!(
+                "Value of interpreted expression:{:?} \n is {}",
+                printr_expr,
+                &interpreted_exp.unwrap()
+            );
         }
     }
     /// Returns the type of the current token.
