@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Neg};
+use std::fmt::Display;
 
 use crate::{
     lexer::{Keyword, TokenKind},
