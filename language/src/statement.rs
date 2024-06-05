@@ -1,4 +1,6 @@
 use crate::expression::{Expr, Variable};
+use crate::lexer::Keyword;
+use crate::parser::Parser;
 use crate::token::Token;
 
 #[allow(dead_code)]
@@ -14,6 +16,30 @@ pub enum Statement {
     Return(Return),
     Let(Let),
     While(While),
+}
+
+
+impl Parser {
+    fn parse_statement(&mut self) -> Option<Statement> {
+        match self.consume().ttype {
+            Keyword::Print => self.parse_print(),
+            Keyword::Let => self.parse_let(),
+            _ => unimplemented!()
+            
+        }
+    }
+    fn parse_print(&mut self) -> Option<Statement> {
+        self.step();
+        let value = self.parse_expression();
+        Some(Statement::Print(Print{ expression: value}))
+    }
+    ///TODO: Assignment requires a lot of further special handling 
+    fn parse_let(&mut self) -> Option<Statement> {
+        let var = self.peek().clone();
+        self.step();
+        let value = self.parse_expression();
+        Some(Statement::Let(Let { name: var, initializer: value}))
+    }
 }
 
 #[derive(Debug, Clone)]

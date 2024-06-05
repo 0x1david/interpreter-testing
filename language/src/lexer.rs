@@ -279,6 +279,7 @@ pub enum Keyword {
     Let,
     Const,
     While,
+    Print,
 }
 
 impl Keyword {
