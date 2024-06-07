@@ -1,5 +1,5 @@
 use crate::expression::{Expr, Variable};
-use crate::lexer::Keyword;
+use crate::lexer::{Keyword, TokenKind};
 use crate::parser::Parser;
 use crate::token::Token;
 
@@ -18,27 +18,55 @@ pub enum Statement {
     While(While),
 }
 
-
 impl Parser {
-    fn parse_statement(&mut self) -> Option<Statement> {
-        match self.consume().ttype {
-            Keyword::Print => self.parse_print(),
-            Keyword::Let => self.parse_let(),
-            _ => unimplemented!()
-            
+    pub fn parse_statement(&mut self) -> Option<Statement> {
+        let tokenkind = &self.consume().ttype;
+        let kw = tokenkind.keyword();
+
+        if let Some(kw) = kw {
+            match kw {
+                Keyword::Let => self.parse_let(),
+                Keyword::Print => self.parse_print(),
+                _ => unimplemented!(),
+            }
+        } else {
+            self.parse_expression_stmt()
         }
     }
     fn parse_print(&mut self) -> Option<Statement> {
         self.step();
         let value = self.parse_expression();
-        Some(Statement::Print(Print{ expression: value}))
+        if self.consume().ttype != TokenKind::Semicolon {
+            panic!("Expected semicolon after expression statement, proper error handling is TBD.")
+        };
+        Some(Statement::Print(Print { expression: value }))
     }
-    ///TODO: Assignment requires a lot of further special handling 
+
     fn parse_let(&mut self) -> Option<Statement> {
-        let var = self.peek().clone();
-        self.step();
-        let value = self.parse_expression();
-        Some(Statement::Let(Let { name: var, initializer: value}))
+        let identifier = self.consume().clone();
+
+        let value = if self.consume().ttype == TokenKind::Equal {
+            self.parse_expression()
+        } else {
+            panic!("Expected an equal during an assignment parsing after let.")
+        };
+
+        if self.consume().ttype != TokenKind::Semicolon {
+            panic!("Expected semicolon after expression statement, proper error handling is TBD.")
+        };
+
+        Some(Statement::Let(Let {
+            name: identifier,
+            initializer: value,
+        }))
+    }
+    fn parse_expression_stmt(&mut self) -> Option<Statement> {
+        dbg!("Parsing exp: ", &self.peek().ttype);
+        let expr = self.parse_expression();
+        if self.consume().ttype != TokenKind::Semicolon {
+            panic!("Expected semicolon after expression statement, proper error handling is TBD.")
+        };
+        Some(Statement::Expression(Expression { expression: expr }))
     }
 }
 

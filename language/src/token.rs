@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{expression::Literal, lexer::TokenKind};
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -6,6 +8,15 @@ pub struct Token {
     pub literal: Option<Literal>,
     pub span: Span,
     pub line: usize,
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.literal {
+            Some(val) => write!(f, "{}", val),
+            None => panic!("Can't print None")
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

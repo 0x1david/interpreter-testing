@@ -166,6 +166,18 @@ pub enum Expr {
     Binary(Binary),
 }
 
+impl Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expr::Variable(val) => write!(f, "{}", val),
+            Expr::This(val) => write!(f, "{}", val),
+            Expr::Super(val) => write!(f, "{}", val),
+            Expr::Set(val) => write!(f, "{}", val),
+            _ => write!(f, "Cannot be printed (as of now...)")
+        }
+    }
+}
+
 impl Expr {
     /// Creates a new binary expression.
     ///
@@ -471,6 +483,12 @@ pub struct Literal {
     pub value: Object,
 }
 
+impl Display for Literal{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Logical {
     pub lhs: Box<Expr>,
@@ -485,10 +503,22 @@ pub struct Set {
     pub value: Box<Expr>,
 }
 
+impl Display for Set {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        panic!("Can't call print on a SET Expr")
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Super {
     pub keyword: Token,
     pub method: Token,
+}
+
+impl Display for Super {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.keyword)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -496,9 +526,21 @@ pub struct This {
     pub keyword: Token,
 }
 
+impl Display for This {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.keyword)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Variable {
     pub name: Token,
+}
+
+impl Display for Variable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -511,4 +553,17 @@ pub enum Object {
     Integer(i64),
     Float(f64),
     String(String),
+}
+
+impl Display for Object {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::True => write!(f, "True"),
+            Self::False => write!(f, "False"),
+            Self::String(s) => write!(f, "{}", s),
+            Self::Float(n) => write!(f, "{}", n),
+            Self::Integer(n) => write!(f, "{}", n),
+            Self::Null => write!(f, "Null"),
+        }
+    }
 }

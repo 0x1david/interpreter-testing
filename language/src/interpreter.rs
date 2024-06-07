@@ -1,10 +1,7 @@
 #![allow(dead_code)]
-use std::{
-    fmt::Display,
-    ops::{Deref, Neg},
-};
+use std::{fmt::Display, ops::Neg};
 
-use crate::expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken};
+use crate::{expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken}, statement::{Expression, Let, Print, Statement}};
 
 type Result = std::result::Result<Value, String>;
 
@@ -44,7 +41,26 @@ impl Interpreter {
         };
         Ok(value)
     }
+    pub fn interpret_stmt(e: Statement) {
+        match e {
+            Statement::Let(stmt) => Self::interpret_assignment(stmt),
+            Statement::Print(stmt) => Self::interpret_print(stmt),
+            Statement::Expression(expr) => Self::interpret_expr_stmt(expr),
+            _ => panic!("Unimplemented expression type"),
+        };
+    }
 
+    pub fn interpret_expr_stmt(e: Expression) {
+        let _ = Self::interpret_expr(e.expression).expect("Lazy as hell");
+    }
+
+    pub fn interpret_print(e: Print) {
+        let expr = Self::interpret_expr(e.expression);
+        println!("{}", expr.expect("Currently lazy to even come up with text to write."))
+    }
+    pub fn interpret_assignment(e: Let) {
+        unimplemented!();
+    }
     pub fn interpret_literal(e: Literal) -> Value {
         match e.value {
             Object::True => Value::Bool(true),
