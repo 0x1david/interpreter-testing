@@ -21,7 +21,8 @@ pub enum Statement {
 impl Parser {
     pub fn parse_statement(&mut self) -> Option<Statement> {
         let tokenkind = &self.consume().ttype;
-        let kw = tokenkind.keyword();
+        dbg!("Parsing keyword");
+        let kw = dbg!(tokenkind.keyword());
 
         if let Some(kw) = kw {
             match kw {
@@ -34,7 +35,7 @@ impl Parser {
         }
     }
     fn parse_print(&mut self) -> Option<Statement> {
-        self.step();
+        dbg!("parsing print statement");
         let value = self.parse_expression();
         if self.consume().ttype != TokenKind::Semicolon {
             panic!("Expected semicolon after expression statement, proper error handling is TBD.")

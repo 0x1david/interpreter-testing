@@ -90,7 +90,7 @@ impl Parser {
     // passed type)
     pub fn consume(&mut self) -> &Token {
         self.step();
-        let tok = self.previous();
+        let tok = dbg!(self.previous());
         tok
     }
 
@@ -104,13 +104,12 @@ impl Parser {
 
     /// Parses the tokens into a list of statements.
     pub fn parse(&mut self) {
-        println!("now parsing");
         while !self.is_at_end() {
             let stmt = self.parse_statement();
-            self.statements.push(stmt.expect("Should always hold a stmt (Currently..)"))
+            self.statements.push(stmt.clone().expect("Should always hold a stmt (Currently..)"));
             // let printr_expr = exp.clone();
-            // println!("Parse next");
-            // let interpreted_exp = Interpreter::interpret_expr(exp);
+            println!("Should interpret now: CONTENTS : {:?}", stmt.clone().unwrap());
+            Interpreter::interpret_stmt(stmt.expect("Currently in progress"));
             // println!(
             //     "Value of interpreted expression:{:?} \n is {}",
             //     printr_expr,

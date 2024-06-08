@@ -294,6 +294,7 @@ impl Keyword {
     ///
     fn from_word(word: &str) -> Option<Self> {
         match word {
+            "print" => Some(Keyword::Print),
             "and" => Some(Keyword::And),
             "class" => Some(Keyword::Class),
             "else" => Some(Keyword::Else),
@@ -353,19 +354,19 @@ pub(crate) enum TokenKind {
 impl TokenKind {
     pub fn keyword(&self) -> Option<&Keyword> {
         match self {
-            TokenKind::Keyword(kw) => Some(&kw),
+            TokenKind::Keyword(kw) => Some(kw),
             _ => None,
         }
     }
     pub fn string(&self) -> Option<&str> {
         match self {
-            TokenKind::String(s) => Some(&s),
+            TokenKind::String(s) => Some(s),
             _ => None,
         }
     }
     pub fn identifier(&self) -> Option<&str> {
         match self {
-            TokenKind::Identifier(id) => Some(&id),
+            TokenKind::Identifier(id) => Some(id),
             _ => None,
         }
     }
