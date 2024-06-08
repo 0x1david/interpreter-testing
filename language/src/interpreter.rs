@@ -1,10 +1,11 @@
-#![allow(dead_code)]
 use std::{fmt::Display, ops::Neg};
 
-use crate::{expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken}, statement::{Expression, Let, Print, Statement}};
+use crate::{environment::Environment, expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken}, lexer::TokenKind, statement::{Expression, Let, Print, Statement, Variable}};
 
 type Result = std::result::Result<Value, String>;
 
+
+#[derive(Clone)]
 pub enum Value {
     String(String),
     Integer(i64),
@@ -25,43 +26,62 @@ impl Display for Value {
     }
 }
 
-pub struct Interpreter {}
+pub struct Interpreter {
+    environment: Environment
+}
 
 impl Interpreter {
+    pub fn new() -> Self {
+        Self {
+            environment: Environment::new()
+        }
+
+    }
     pub fn interpret() {
         unimplemented!()
     }
 
-    pub fn interpret_expr(e: Expr) -> std::result::Result<Value, String> {
+    pub fn interpret_expr(&self, e: Expr) -> std::result::Result<Value, String> {
         let value = match e {
-            Expr::Literal(expr) => Self::interpret_literal(expr),
-            Expr::Binary(expr) => Self::interpret_binary(expr)?,
-            Expr::Unary(expr) => Self::interpret_unary(expr)?,
+            Expr::Literal(expr) => self.interpret_literal(expr),
+            Expr::Binary(expr) => self.interpret_binary(expr)?,
+            Expr::Unary(expr) => self.interpret_unary(expr)?,
+            Expr::Variable(expr) => self.interpret_var(expr)?,
             _ => return Err("Unimplemented expression type".to_string()),
         };
         Ok(value)
     }
-    pub fn interpret_stmt(e: Statement) {
+    pub fn interpret_stmt(&mut self, e: Statement) {
         match e {
-            Statement::Let(stmt) => Self::interpret_assignment(stmt),
-            Statement::Print(stmt) => Self::interpret_print(stmt),
-            Statement::Expression(expr) => Self::interpret_expr_stmt(expr),
-            _ => panic!("Unimplemented expression type"),
+            Statement::Let(stmt) => self.interpret_assignment(stmt),
+            Statement::Print(stmt) => self.interpret_print(stmt),
+            Statement::Expression(expr) => self.interpret_expr_stmt(expr),
+            _ => panic!("Unimplemented statement type"),
         };
     }
 
-    pub fn interpret_expr_stmt(e: Expression) {
-        let _ = Self::interpret_expr(e.expression).expect("Lazy as hell");
+    pub fn interpret_expr_stmt(&self, e: Expression) {
+        let _ = self.interpret_expr(e.expression).expect("Lazy as hell");
     }
 
-    pub fn interpret_print(e: Print) {
-        let expr = Self::interpret_expr(e.expression);
+    pub fn interpret_var(&self, e: crate::expression::Variable) -> Result {
+        self.environment.read(&e.name)
+    }
+
+    pub fn interpret_print(&self, e: Print) {
+        let expr = self.interpret_expr(e.expression);
         println!("{}", expr.expect("Currently lazy to even come up with text to write."))
     }
-    pub fn interpret_assignment(e: Let) {
-        unimplemented!();
+    pub fn interpret_assignment(&mut self, e: Let) {
+        let val = self.interpret_expr(e.initializer).unwrap();
+        let name = match dbg!(e.name.ttype) {
+            TokenKind::Identifier(s) => s,
+            _ => panic!("Assignment should never have a name that is not a string")
+        };
+        self.environment.define(name, val);
     }
-    pub fn interpret_literal(e: Literal) -> Value {
+
+    pub fn interpret_literal(&self, e: Literal) -> Value {
         match e.value {
             Object::True => Value::Bool(true),
             Object::False => Value::Bool(false),
@@ -71,9 +91,9 @@ impl Interpreter {
             Object::Null => Value::Nil,
         }
     }
-    pub fn interpret_binary(e: Binary) -> Result {
-        let lhs = Self::interpret_expr(*e.lhs)?;
-        let rhs = Self::interpret_expr(*e.rhs)?;
+    pub fn interpret_binary(&self, e: Binary) -> Result {
+        let lhs = self.interpret_expr(*e.lhs)?;
+        let rhs = self.interpret_expr(*e.rhs)?;
 
         match (&lhs, &e.operator, &rhs) {
             (Value::String(s1), BinaryOpToken::Plus, Value::String(s2)) => {
@@ -115,8 +135,8 @@ impl Interpreter {
             )),
         }
     }
-    fn interpret_unary(e: Unary) -> Result {
-        let rhs = Self::interpret_expr(*e.value)?;
+    fn interpret_unary(&self, e: Unary) -> Result {
+        let rhs = self.interpret_expr(*e.value)?;
         let operator = e.operator;
 
         match (&operator, &rhs) {

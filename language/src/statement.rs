@@ -1,9 +1,8 @@
-use crate::expression::{Expr, Variable};
+use crate::expression::{Expr, Literal};
 use crate::lexer::{Keyword, TokenKind};
 use crate::parser::Parser;
 use crate::token::Token;
 
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum Statement {
     Block(Block),
@@ -16,11 +15,12 @@ pub enum Statement {
     Return(Return),
     Let(Let),
     While(While),
+    Variable(Variable),
 }
 
 impl Parser {
     pub fn parse_statement(&mut self) -> Option<Statement> {
-        let tokenkind = &self.consume().ttype;
+        let tokenkind = &self.consume().ttype.clone();
         dbg!("Parsing keyword");
         let kw = dbg!(tokenkind.keyword());
 
@@ -30,6 +30,8 @@ impl Parser {
                 Keyword::Print => self.parse_print(),
                 _ => unimplemented!(),
             }
+        } else if let Some(ident) = tokenkind.identifier() {
+            self.parse_variable_expression(ident.to_string())
         } else {
             self.parse_expression_stmt()
         }
@@ -53,7 +55,7 @@ impl Parser {
         };
 
         if self.consume().ttype != TokenKind::Semicolon {
-            panic!("Expected semicolon after expression statement, proper error handling is TBD.")
+            panic!("Expected semicolon after let statement, proper error handling is TBD.")
         };
 
         Some(Statement::Let(Let {
@@ -68,6 +70,9 @@ impl Parser {
             panic!("Expected semicolon after expression statement, proper error handling is TBD.")
         };
         Some(Statement::Expression(Expression { expression: expr }))
+    }
+    fn parse_variable_expression(&mut self, ident: String) -> Option<Statement> {
+        Some(Statement::Variable( Variable { name: ident.to_string()} ))
     }
 }
 
@@ -130,4 +135,9 @@ pub struct Let {
 pub struct While {
     pub condition: Expression,
     pub body: Box<Statement>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Variable {
+    pub name: String,
 }

@@ -104,12 +104,13 @@ impl Parser {
 
     /// Parses the tokens into a list of statements.
     pub fn parse(&mut self) {
+        let mut interpreter = Interpreter::new();
         while !self.is_at_end() {
             let stmt = self.parse_statement();
             self.statements.push(stmt.clone().expect("Should always hold a stmt (Currently..)"));
             // let printr_expr = exp.clone();
             println!("Should interpret now: CONTENTS : {:?}", stmt.clone().unwrap());
-            Interpreter::interpret_stmt(stmt.expect("Currently in progress"));
+            interpreter.interpret_stmt(stmt.expect("Currently in progress"));
             // println!(
             //     "Value of interpreted expression:{:?} \n is {}",
             //     printr_expr,

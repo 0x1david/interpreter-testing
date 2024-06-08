@@ -137,6 +137,12 @@ impl Parser {
             return Some(Expr::literal(Object::Float(f)));
         };
 
+        if let Some(f) = self.token_type().identifier() {
+            let f_copy = f.to_string();
+            self.step();
+            return Some(Expr::variable(f_copy));
+        };
+
         if self.token_type() == &TokenKind::LeftParen {
             self.step();
             let expr = self.parse_expression();
@@ -389,8 +395,8 @@ impl Expr {
     /// # Returns
     ///
     /// A new `Expr::Variable` instance.
-    fn variable(name: Token) -> Self {
-        let v = Variable { name };
+    fn variable(name: String) -> Self {
+        let v = Variable { name: name.to_string() };
         Self::Variable(v)
     }
 }
@@ -534,7 +540,7 @@ impl Display for This {
 
 #[derive(Debug, Clone)]
 pub struct Variable {
-    pub name: Token,
+    pub name: String,
 }
 
 impl Display for Variable {

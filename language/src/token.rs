@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
 use crate::{expression::Literal, lexer::TokenKind};
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Token {
     pub ttype: TokenKind,
