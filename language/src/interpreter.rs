@@ -1,6 +1,11 @@
 use std::{fmt::Display, ops::Neg};
 
-use crate::{environment::Environment, expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken}, lexer::TokenKind, statement::{Expression, Let, Print, Statement, Variable}};
+use crate::{
+    environment::Environment,
+    expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken},
+    lexer::TokenKind,
+    statement::{Expression, Let, Print, Statement, Variable},
+};
 
 type Result = std::result::Result<Value, String>;
 
@@ -28,14 +33,14 @@ impl Display for Value {
 
 /// The main interpreter struct that holds the environment and interprets expressions and statements.
 pub struct Interpreter {
-    environment: Environment
+    environment: Environment,
 }
 
 impl Interpreter {
     /// Creates a new Interpreter instance with an empty environment.
     pub fn new() -> Self {
         Self {
-            environment: Environment::new()
+            environment: Environment::new(),
         }
     }
 
@@ -84,7 +89,9 @@ impl Interpreter {
     ///
     /// * `e` - The expression statement to interpret.
     pub fn interpret_expr_stmt(&self, e: Expression) {
-        let _ = self.interpret_expr(e.expression).expect("Failed interpreting an expression statement.");
+        let _ = self
+            .interpret_expr(e.expression)
+            .expect("Failed interpreting an expression statement.");
     }
 
     /// Interprets a variable expression and returns its value.
@@ -107,7 +114,10 @@ impl Interpreter {
     /// * `e` - The print statement to interpret.
     pub fn interpret_print(&self, e: Print) {
         let expr = self.interpret_expr(e.expression);
-        println!("{}", expr.expect("Failed interpreting an expression statement"))
+        println!(
+            "{}",
+            expr.expect("Failed interpreting an expression statement")
+        )
     }
 
     /// Interprets an assignment statement and updates the environment.
@@ -119,7 +129,7 @@ impl Interpreter {
         let val = self.interpret_expr(e.initializer).unwrap();
         let name = match dbg!(e.name.ttype) {
             TokenKind::Identifier(s) => s,
-            _ => panic!("Assignment should never have a name that is not a string")
+            _ => panic!("Assignment should never have a name that is not a string"),
         };
         self.environment.define(name, val);
     }

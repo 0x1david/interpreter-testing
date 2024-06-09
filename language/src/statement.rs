@@ -81,7 +81,9 @@ impl Parser {
 
     /// Parses a variable expression and returns an optional `Statement`.
     fn parse_variable_expression(&mut self, ident: String) -> Option<Statement> {
-        Some(Statement::Variable(Variable { name: ident.to_string() }))
+        Some(Statement::Variable(Variable {
+            name: ident.to_string(),
+        }))
     }
 }
 

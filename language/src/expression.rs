@@ -179,7 +179,7 @@ impl Display for Expr {
             Expr::This(val) => write!(f, "{}", val),
             Expr::Super(val) => write!(f, "{}", val),
             Expr::Set(val) => write!(f, "{}", val),
-            _ => write!(f, "Cannot be printed (as of now...)")
+            _ => write!(f, "Cannot be printed (as of now...)"),
         }
     }
 }
@@ -396,7 +396,9 @@ impl Expr {
     ///
     /// A new `Expr::Variable` instance.
     fn variable(name: String) -> Self {
-        let v = Variable { name: name.to_string() };
+        let v = Variable {
+            name: name.to_string(),
+        };
         Self::Variable(v)
     }
 }
@@ -489,7 +491,7 @@ pub struct Literal {
     pub value: Object,
 }
 
-impl Display for Literal{
+impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.value)
     }

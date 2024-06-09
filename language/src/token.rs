@@ -15,7 +15,7 @@ impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.literal {
             Some(val) => write!(f, "{}", val),
-            None => panic!("Can't print None")
+            None => panic!("Can't print None"),
         }
     }
 }
