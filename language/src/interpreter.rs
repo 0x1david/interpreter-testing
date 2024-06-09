@@ -4,7 +4,7 @@ use crate::{environment::Environment, expression::{Binary, BinaryOpToken, Expr, 
 
 type Result = std::result::Result<Value, String>;
 
-
+/// Represents the possible values that can be stored in the interpreter's environment.
 #[derive(Clone)]
 pub enum Value {
     String(String),
@@ -26,21 +26,33 @@ impl Display for Value {
     }
 }
 
+/// The main interpreter struct that holds the environment and interprets expressions and statements.
 pub struct Interpreter {
     environment: Environment
 }
 
 impl Interpreter {
+    /// Creates a new Interpreter instance with an empty environment.
     pub fn new() -> Self {
         Self {
             environment: Environment::new()
         }
-
     }
+
+    /// Placeholder for the main interpret function, yet to be implemented.
     pub fn interpret() {
         unimplemented!()
     }
 
+    /// Interprets an expression and returns the resulting value or an error.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The expression to interpret.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the value or an error message.
     pub fn interpret_expr(&self, e: Expr) -> std::result::Result<Value, String> {
         let value = match e {
             Expr::Literal(expr) => self.interpret_literal(expr),
@@ -51,6 +63,12 @@ impl Interpreter {
         };
         Ok(value)
     }
+
+    /// Interprets a statement and executes it.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The statement to interpret.
     pub fn interpret_stmt(&mut self, e: Statement) {
         match e {
             Statement::Let(stmt) => self.interpret_assignment(stmt),
@@ -60,18 +78,43 @@ impl Interpreter {
         };
     }
 
+    /// Interprets an expression statement.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The expression statement to interpret.
     pub fn interpret_expr_stmt(&self, e: Expression) {
-        let _ = self.interpret_expr(e.expression).expect("Lazy as hell");
+        let _ = self.interpret_expr(e.expression).expect("Failed interpreting an expression statement.");
     }
 
+    /// Interprets a variable expression and returns its value.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The variable expression to interpret.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the value or an error message.
     pub fn interpret_var(&self, e: crate::expression::Variable) -> Result {
         self.environment.read(&e.name)
     }
 
+    /// Interprets a print statement and outputs the result.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The print statement to interpret.
     pub fn interpret_print(&self, e: Print) {
         let expr = self.interpret_expr(e.expression);
-        println!("{}", expr.expect("Currently lazy to even come up with text to write."))
+        println!("{}", expr.expect("Failed interpreting an expression statement"))
     }
+
+    /// Interprets an assignment statement and updates the environment.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The assignment statement to interpret.
     pub fn interpret_assignment(&mut self, e: Let) {
         let val = self.interpret_expr(e.initializer).unwrap();
         let name = match dbg!(e.name.ttype) {
@@ -81,6 +124,15 @@ impl Interpreter {
         self.environment.define(name, val);
     }
 
+    /// Interprets a literal expression and returns its value.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The literal expression to interpret.
+    ///
+    /// # Returns
+    ///
+    /// The value of the literal expression.
     pub fn interpret_literal(&self, e: Literal) -> Value {
         match e.value {
             Object::True => Value::Bool(true),
@@ -91,6 +143,16 @@ impl Interpreter {
             Object::Null => Value::Nil,
         }
     }
+
+    /// Interprets a binary expression and returns its value or an error.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The binary expression to interpret.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the value or an error message.
     pub fn interpret_binary(&self, e: Binary) -> Result {
         let lhs = self.interpret_expr(*e.lhs)?;
         let rhs = self.interpret_expr(*e.rhs)?;
@@ -135,6 +197,16 @@ impl Interpreter {
             )),
         }
     }
+
+    /// Interprets a unary expression and returns its value or an error.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The unary expression to interpret.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the value or an error message.
     fn interpret_unary(&self, e: Unary) -> Result {
         let rhs = self.interpret_expr(*e.value)?;
         let operator = e.operator;

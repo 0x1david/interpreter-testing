@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
-mod ast;
 mod expression;
 mod interpreter;
 mod lexer;
