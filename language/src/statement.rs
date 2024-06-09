@@ -36,8 +36,7 @@ impl Parser {
             self.parse_variable_expression(ident.to_string())
         } else if tokenkind.left_brace() {
             self.parse_block()
-        }
-        else {
+        } else {
             self.parse_expression_stmt()
         }
     }
@@ -78,7 +77,10 @@ impl Parser {
         let mut stmts = vec![];
         while !self.peek().ttype.right_brace() && !self.is_at_end() {
             dbg!("PARSING A BLOCK");
-            stmts.push(self.parse_statement().expect("Found something else than a statement in a block."));
+            stmts.push(
+                self.parse_statement()
+                    .expect("Found something else than a statement in a block."),
+            );
         }
 
         dbg!("fINISHED PARSING A BLOCK");
@@ -89,7 +91,6 @@ impl Parser {
         } else {
             panic!("Unterminated block.")
         }
-
     }
     /// Parses an expression statement and returns an optional `Statement`.
     fn parse_expression_stmt(&mut self) -> Option<Statement> {

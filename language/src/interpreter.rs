@@ -110,7 +110,8 @@ impl Interpreter {
     }
 
     pub fn interpret_var_stmt(&self, e: Variable) {
-        self.interpret_var(crate::expression::Variable{name: e.name}); }
+        self.interpret_var(crate::expression::Variable { name: e.name });
+    }
     /// Interprets a print statement and outputs the result.
     ///
     /// # Arguments
@@ -235,7 +236,9 @@ impl Interpreter {
 
     fn interpret_block(&mut self, e: Block) {
         let outer_environment = self.environment.clone();
-        self.environment = Rc::new(RefCell::new(Environment::new_scoped(self.environment.clone())));
+        self.environment = Rc::new(RefCell::new(Environment::new_scoped(
+            self.environment.clone(),
+        )));
         for stmt in dbg!(e.statements) {
             dbg!("Interpreting block stmts");
             self.interpret_stmt(dbg!(stmt));

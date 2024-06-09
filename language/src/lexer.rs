@@ -382,16 +382,10 @@ impl TokenKind {
         }
     }
     pub fn left_brace(&self) -> bool {
-        match self {
-            TokenKind::LeftBrace => true,
-            _ => false,
-        }
+        matches!(self, TokenKind::LeftBrace)
     }
     pub fn right_brace(&self) -> bool {
-        match self {
-            TokenKind::RightBrace => true,
-            _ => false,
-        }
+        matches!(self, TokenKind::RightBrace)
     }
 }
 
