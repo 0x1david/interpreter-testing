@@ -20,11 +20,28 @@ const FILE_PATH: &str = "./test_file.lngg";
 fn main() {
     // let script = fs::read_to_string(FILE_PATH).expect("Shouldnt fail reading this test file.");
     // let mut lexer = Lexer::new(&script);
+    // let mut lexer = Lexer::new(
+    // "
+    // let x = 362 + 439 * 88 + 8 * 9 == 39066;
+    // print x;
+    // ",
+    // );
     let mut lexer = Lexer::new(
         "
-    let x = 362 + 439 * 88 + 8 * 9 == 39066;
-    print x;
-                               ",
+        let foo = 1;
+        let bar = 2;
+        {
+            print foo;
+            let bar = 4;
+            print bar;
+            {
+                let baz = 893;
+            }
+            print bar;
+        }
+        print foo;
+        print baz;
+        ",
     );
     lexer.scan_tokens();
     println!("{:?}", lexer.tokens);

@@ -34,7 +34,10 @@ impl Parser {
             }
         } else if let Some(ident) = tokenkind.identifier() {
             self.parse_variable_expression(ident.to_string())
-        } else {
+        } else if tokenkind.left_brace() {
+            self.parse_block()
+        }
+        else {
             self.parse_expression_stmt()
         }
     }
@@ -63,12 +66,31 @@ impl Parser {
             panic!("Expected semicolon after let statement, proper error handling is TBD.")
         };
 
-        Some(Statement::Let(Let {
+        dbg!("Returning form let parsing");
+        dbg!(Some(Statement::Let(Let {
             name: identifier,
             initializer: value,
-        }))
+        })))
     }
 
+    /// Parses a block and returns an optional `Statement`.
+    fn parse_block(&mut self) -> Option<Statement> {
+        let mut stmts = vec![];
+        while !self.peek().ttype.right_brace() && !self.is_at_end() {
+            dbg!("PARSING A BLOCK");
+            stmts.push(self.parse_statement().expect("Found something else than a statement in a block."));
+        }
+
+        dbg!("fINISHED PARSING A BLOCK");
+
+        if self.peek().ttype.right_brace() {
+            self.consume();
+            Some(Statement::Block(Block { statements: stmts }))
+        } else {
+            panic!("Unterminated block.")
+        }
+
+    }
     /// Parses an expression statement and returns an optional `Statement`.
     fn parse_expression_stmt(&mut self) -> Option<Statement> {
         dbg!("Parsing exp: ", &self.peek().ttype);
@@ -81,6 +103,7 @@ impl Parser {
 
     /// Parses a variable expression and returns an optional `Statement`.
     fn parse_variable_expression(&mut self, ident: String) -> Option<Statement> {
+        println!("IN VARIABLE = {:?}", self.peek());
         Some(Statement::Variable(Variable {
             name: ident.to_string(),
         }))

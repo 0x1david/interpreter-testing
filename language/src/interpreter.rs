@@ -1,10 +1,10 @@
-use std::{fmt::Display, ops::Neg};
+use std::{cell::RefCell, fmt::Display, ops::Neg, rc::Rc};
 
 use crate::{
     environment::Environment,
     expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken},
     lexer::TokenKind,
-    statement::{Expression, Let, Print, Statement, Variable},
+    statement::{Block, Expression, Let, Print, Statement, Variable},
 };
 
 type Result = std::result::Result<Value, String>;
@@ -33,14 +33,14 @@ impl Display for Value {
 
 /// The main interpreter struct that holds the environment and interprets expressions and statements.
 pub struct Interpreter {
-    environment: Environment,
+    pub environment: Rc<RefCell<Environment>>,
 }
 
 impl Interpreter {
     /// Creates a new Interpreter instance with an empty environment.
     pub fn new() -> Self {
         Self {
-            environment: Environment::new(),
+            environment: Rc::new(RefCell::new(Environment::new())),
         }
     }
 
@@ -75,10 +75,12 @@ impl Interpreter {
     ///
     /// * `e` - The statement to interpret.
     pub fn interpret_stmt(&mut self, e: Statement) {
-        match e {
+        match dbg!(e) {
             Statement::Let(stmt) => self.interpret_assignment(stmt),
             Statement::Print(stmt) => self.interpret_print(stmt),
             Statement::Expression(expr) => self.interpret_expr_stmt(expr),
+            Statement::Block(expr) => self.interpret_block(expr),
+            Statement::Variable(expr) => self.interpret_var_stmt(expr),
             _ => panic!("Unimplemented statement type"),
         };
     }
@@ -104,9 +106,11 @@ impl Interpreter {
     ///
     /// A `Result` containing the value or an error message.
     pub fn interpret_var(&self, e: crate::expression::Variable) -> Result {
-        self.environment.read(&e.name)
+        self.environment.borrow().read(&e.name)
     }
 
+    pub fn interpret_var_stmt(&self, e: Variable) {
+        self.interpret_var(crate::expression::Variable{name: e.name}); }
     /// Interprets a print statement and outputs the result.
     ///
     /// # Arguments
@@ -114,6 +118,7 @@ impl Interpreter {
     /// * `e` - The print statement to interpret.
     pub fn interpret_print(&self, e: Print) {
         let expr = self.interpret_expr(e.expression);
+        println!("PRINTING VALUE HERE");
         println!(
             "{}",
             expr.expect("Failed interpreting an expression statement")
@@ -131,7 +136,7 @@ impl Interpreter {
             TokenKind::Identifier(s) => s,
             _ => panic!("Assignment should never have a name that is not a string"),
         };
-        self.environment.define(name, val);
+        self.environment.borrow_mut().define(name, val);
     }
 
     /// Interprets a literal expression and returns its value.
@@ -226,5 +231,17 @@ impl Interpreter {
             (UnaryOpToken::Bang, Value::Bool(b)) => Ok(Value::Bool(!b)),
             _ => Err(format!("Invalid arguments found for a Unary Expression: operator: {operator}, value: {rhs}"))
         }
+    }
+
+    fn interpret_block(&mut self, e: Block) {
+        let outer_environment = self.environment.clone();
+        self.environment = Rc::new(RefCell::new(Environment::new_scoped(self.environment.clone())));
+        for stmt in dbg!(e.statements) {
+            dbg!("Interpreting block stmts");
+            self.interpret_stmt(dbg!(stmt));
+        }
+        dbg!("Done interpreting block stmts");
+
+        self.environment = outer_environment;
     }
 }
