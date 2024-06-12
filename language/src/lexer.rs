@@ -264,12 +264,13 @@ impl<'a> Lexer<'a> {
 pub enum Keyword {
     And,
     Class,
+    If,
     Else,
+    Elif,
     False,
     True,
     For,
     Proc,
-    If,
     Null,
     Or,
     Return,
@@ -290,18 +291,18 @@ impl Keyword {
     /// # Returns
     /// - `Some(Keyword)` if the word matches a keyword.
     /// - `None` if the word does not match any keyword.
-    ///
     fn from_word(word: &str) -> Option<Self> {
         match word {
             "print" => Some(Keyword::Print),
             "and" => Some(Keyword::And),
             "class" => Some(Keyword::Class),
+            "if" => Some(Keyword::If),
+            "elif" => Some(Keyword::Elif),
             "else" => Some(Keyword::Else),
             "false" => Some(Keyword::False),
             "true" => Some(Keyword::True),
             "for" => Some(Keyword::For),
             "proc" => Some(Keyword::Proc),
-            "if" => Some(Keyword::If),
             "null" => Some(Keyword::Null),
             "or" => Some(Keyword::Or),
             "return" => Some(Keyword::Return),

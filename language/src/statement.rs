@@ -30,6 +30,7 @@ impl Parser {
             match kw {
                 Keyword::Let => self.parse_let(),
                 Keyword::Print => self.parse_print(),
+                Keyword::If => self.parse_if(),
                 _ => unimplemented!(),
             }
         } else if let Some(ident) = tokenkind.identifier() {
@@ -49,6 +50,35 @@ impl Parser {
             panic!("Expected semicolon after expression statement, proper error handling is TBD.")
         };
         Some(Statement::Print(Print { expression: value }))
+    }
+
+    /// Parses a print statement and returns an optional `Statement`.
+    fn parse_if(&mut self) -> Option<Statement> {
+        dbg!("Parsing if statement");
+        let cond = self.parse_expression();
+        if !self.consume().ttype.left_brace() {
+            panic!("Expected left brace after stating the condition of an if statement, proper error handling is TBD.")
+        };
+        let block = self.parse_block()?;
+        let mut elifs = vec![];
+        while self.peek().ttype == TokenKind::Keyword(Keyword::Elif) {
+            self.step();
+            let elif_cond = self.parse_expression();
+            if !self.consume().ttype.left_brace() {
+                panic!("Expected left brace after stating the condition of an if statement, proper error handling is TBD.")
+            };
+            let elif_block = self.parse_block()?;
+            elifs.push((elif_cond, elif_block))
+        }
+        if self.consume().ttype == TokenKind::Keyword(Keyword::Else) {
+            if !self.consume().ttype.left_brace() {
+                panic!("Expected left brace after stating the condition of an if statement, proper error handling is TBD.")
+            };
+            let else_block = self.parse_block()?;
+            Some(Statement::If(If { condition: cond, then_branch: Box::new(block), elif_branches: elifs, else_branch: Some(Box::new(else_block))}))
+        } else {
+            Some(Statement::If(If { condition: cond, then_branch: Box::new(block), elif_branches: elifs, else_branch: None}))
+        }
     }
 
     /// Parses a let statement and returns an optional `Statement`.
@@ -147,12 +177,16 @@ pub struct Function {
     pub body: Vec<Statement>,
 }
 
+type ElifNode = (Expr, Statement);
+type ElseNode = Option<Box<Statement>>;
+
 /// Represents an if statement.
 #[derive(Debug, Clone)]
 pub struct If {
     pub condition: Expr,
     pub then_branch: Box<Statement>,
-    pub else_branch: Box<Statement>,
+    pub elif_branches: Vec<ElifNode>,
+    pub else_branch: ElseNode,
 }
 
 /// Represents a print statement.

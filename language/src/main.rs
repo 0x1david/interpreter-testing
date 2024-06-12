@@ -27,9 +27,20 @@ fn main() {
     // ",
     // );
     let mut lexer = Lexer::new(
-        "
+        r#"
+        let strx = "string";
+        if strx == "string" {
+            print foo;
+        } elif strx == "apple" {
+            print bar;
+        } elif strx == "apple" {
+            print baz;
+        } else {
+            print xxx;
+        }
         let foo = 1;
         let bar = 2;
+        print strx;
         {
             print foo;
             let bar = 4;
@@ -40,8 +51,7 @@ fn main() {
             print bar;
         }
         print foo;
-        print baz;
-        ",
+        "#,
     );
     lexer.scan_tokens();
     println!("{:?}", lexer.tokens);

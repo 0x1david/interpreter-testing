@@ -137,12 +137,16 @@ impl Parser {
             return Some(Expr::literal(Object::Float(f)));
         };
 
-        if let Some(f) = self.token_type().identifier() {
-            let f_copy = f.to_string();
+        if let Some(ident) = self.token_type().identifier() {
+            let ident_copy = ident.to_string();
             self.step();
-            return Some(Expr::variable(f_copy));
+            return Some(Expr::variable(ident_copy));
         };
-
+        if let Some(s) = self.token_type().string() {
+            let s_copy = s.to_string();
+            self.step();
+            return Some(Expr::literal(Object::String(s_copy)));
+        };
         if self.token_type() == &TokenKind::LeftParen {
             self.step();
             let expr = self.parse_expression();
