@@ -75,9 +75,19 @@ impl Parser {
                 panic!("Expected left brace after stating the condition of an if statement, proper error handling is TBD.")
             };
             let else_block = self.parse_block()?;
-            Some(Statement::If(If { condition: cond, then_branch: Box::new(block), elif_branches: elifs, else_branch: Some(Box::new(else_block))}))
+            Some(Statement::If(If {
+                condition: cond,
+                then_branch: Box::new(block),
+                elif_branches: elifs,
+                else_branch: Some(Box::new(else_block)),
+            }))
         } else {
-            Some(Statement::If(If { condition: cond, then_branch: Box::new(block), elif_branches: elifs, else_branch: None}))
+            Some(Statement::If(If {
+                condition: cond,
+                then_branch: Box::new(block),
+                elif_branches: elifs,
+                else_branch: None,
+            }))
         }
     }
 

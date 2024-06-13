@@ -4,7 +4,7 @@ use crate::{
     environment::Environment,
     expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken},
     lexer::TokenKind,
-    statement::{Block, Expression, Let, Print, Statement, Variable},
+    statement::{Block, Expression, If, Let, Print, Statement, Variable},
 };
 
 type Result = std::result::Result<Value, String>;
@@ -17,6 +17,15 @@ pub enum Value {
     Float(f64),
     Nil,
     Bool(bool),
+}
+
+impl Value {
+    pub fn bool_true(&self) -> bool {
+        match self {
+            Self::Bool(b) => *b,
+            _ => false,
+        }
+    }
 }
 
 impl Display for Value {
@@ -81,6 +90,7 @@ impl Interpreter {
             Statement::Expression(expr) => self.interpret_expr_stmt(expr),
             Statement::Block(expr) => self.interpret_block(expr),
             Statement::Variable(expr) => self.interpret_var_stmt(expr),
+            Statement::If(expr) => self.interpret_if_stmt(expr),
             _ => panic!("Unimplemented statement type"),
         };
     }
@@ -94,6 +104,33 @@ impl Interpreter {
         let _ = self
             .interpret_expr(e.expression)
             .expect("Failed interpreting an expression statement.");
+    }
+
+    /// Interprets a conditional 'If' statement..
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The if statement to interpret.
+    pub fn interpret_if_stmt(&mut self, e: If) {
+        if self
+            .interpret_expr(e.condition)
+            .expect("Couldn't interpret expression as boolean logic condition for a conditional statement.")
+            .bool_true() {
+                self.interpret_stmt(*e.then_branch)
+        } else {
+            for (cond, branch) in e.elif_branches {
+                if self
+                    .interpret_expr(cond)
+                    .expect("Couldn't interpret expression as boolean logic condition for a conditional statement.")
+                    .bool_true() {
+                        self.interpret_stmt(branch);
+                        return
+                    }
+            }
+            if let Some(branch) = e.else_branch {
+                self.interpret_stmt(*branch)
+            }
+        }
     }
 
     /// Interprets a variable expression and returns its value.
@@ -194,6 +231,9 @@ impl Interpreter {
             }
             (Value::Integer(n1), BinaryOpToken::EqualEqual, Value::Integer(n2)) => {
                 Ok(Value::Bool(n1 == n2))
+            }
+            (Value::String(s1), BinaryOpToken::EqualEqual, Value::String(s2)) => {
+                Ok(Value::Bool(s1 == s2))
             }
             (Value::Integer(n1), BinaryOpToken::Greater, Value::Integer(n2)) => {
                 Ok(Value::Bool(n1 > n2))

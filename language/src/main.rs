@@ -28,15 +28,19 @@ fn main() {
     // );
     let mut lexer = Lexer::new(
         r#"
-        let strx = "string";
+        let strx = "neither";
+        let foo = 1;
+        let bar = 2;
+        let baz = 3;
+        let bax = 4;
         if strx == "string" {
             print foo;
         } elif strx == "apple" {
             print bar;
-        } elif strx == "apple" {
+        } elif strx == "pear" {
             print baz;
         } else {
-            print xxx;
+            print bax;
         }
         let foo = 1;
         let bar = 2;
