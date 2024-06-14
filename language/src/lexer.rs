@@ -382,11 +382,23 @@ impl TokenKind {
             _ => None,
         }
     }
+    pub fn semicolon(&self) -> bool {
+        matches!(self, TokenKind::Semicolon)
+    }
     pub fn left_brace(&self) -> bool {
         matches!(self, TokenKind::LeftBrace)
     }
     pub fn right_brace(&self) -> bool {
         matches!(self, TokenKind::RightBrace)
+    }
+    pub fn left_paren(&self) -> bool {
+        matches!(self, TokenKind::LeftParen)
+    }
+    pub fn right_paren(&self) -> bool {
+        matches!(self, TokenKind::RightParen)
+    }
+    pub fn equal(&self) -> bool {
+        matches!(self, TokenKind::Equal)
     }
 }
 

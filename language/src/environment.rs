@@ -35,6 +35,24 @@ impl Environment {
         self.map.insert(name.to_string(), val);
     }
 
+
+    /// Assigns to an existing variable in the environment with the given name and value.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - A String representing the name of the variable.
+    /// * `val` - The value to associate with the variable.
+    pub fn assign(&mut self, name: &str, val: Value) -> Result<(), String> {
+        if self.map.contains_key(name) {
+            self.map.insert(name.to_string(), val);
+            Ok(())
+        } else if let Some(ref outer) = self.outer {
+            outer.borrow_mut().assign(name, val)
+        } else {
+            Err(format!("Variable '{}' not defined", name))
+        }
+    }
+
     /// Reads the value associated with the given variable name from the local environment or any
     /// of the outer ones.
     ///

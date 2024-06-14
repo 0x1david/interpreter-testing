@@ -2,9 +2,11 @@ use std::{cell::RefCell, fmt::Display, ops::Neg, rc::Rc};
 
 use crate::{
     environment::Environment,
-    expression::{Binary, BinaryOpToken, Expr, Literal, Logical, Object, Unary, UnaryOpToken},
+    expression::{
+        Assign, Binary, BinaryOpToken, Expr, Literal, Logical, Object, Unary, UnaryOpToken, Variable
+    },
     lexer::TokenKind,
-    statement::{Block, Expression, If, Let, Print, Statement, Variable},
+    statement::{Block, Expression, If, Let, Print, Statement, While},
 };
 
 type Result = std::result::Result<Value, String>;
@@ -67,14 +69,15 @@ impl Interpreter {
     /// # Returns
     ///
     /// A `Result` containing the value or an error message.
-    pub fn interpret_expr(&self, e: Expr) -> std::result::Result<Value, String> {
+    pub fn interpret_expr(&mut self, e: Expr) -> std::result::Result<Value, String> {
         let value = match e {
             Expr::Literal(expr) => self.interpret_literal(expr),
             Expr::Logical(expr) => self.interpret_logical(expr)?,
             Expr::Binary(expr) => self.interpret_binary(expr)?,
             Expr::Unary(expr) => self.interpret_unary(expr)?,
             Expr::Variable(expr) => self.interpret_var(expr)?,
-            _ => return Err("Unimplemented expression type".to_string()),
+            Expr::Assign(expr) => self.interpret_assign_expression(expr)?,
+            _ => return Err(format!("Unimplemented expression type: {:?}", e)),
         };
         Ok(value)
     }
@@ -88,11 +91,13 @@ impl Interpreter {
     /// # Returns
     ///
     /// A `Result` containing the value or an error message.
-    pub fn interpret_logical(&self, e: Logical) -> std::result::Result<Value, String> {
+    pub fn interpret_logical(&mut self, e: Logical) -> std::result::Result<Value, String> {
         let value = if e.operator.and() {
-            self.interpret_expr(*e.lhs).unwrap().bool_true() && self.interpret_expr(*e.rhs).unwrap().bool_true()
+            self.interpret_expr(*e.lhs).unwrap().bool_true()
+                && self.interpret_expr(*e.rhs).unwrap().bool_true()
         } else if e.operator.or() {
-            self.interpret_expr(*e.lhs).unwrap().bool_true() || self.interpret_expr(*e.rhs).unwrap().bool_true()
+            self.interpret_expr(*e.lhs).unwrap().bool_true()
+                || self.interpret_expr(*e.rhs).unwrap().bool_true()
         } else {
             panic!("Only the logical operators (AND, OR) exist")
         };
@@ -105,14 +110,15 @@ impl Interpreter {
     ///
     /// * `e` - The statement to interpret.
     pub fn interpret_stmt(&mut self, e: Statement) {
-        match dbg!(e) {
+        match e {
             Statement::Let(stmt) => self.interpret_assignment(stmt),
             Statement::Print(stmt) => self.interpret_print(stmt),
             Statement::Expression(expr) => self.interpret_expr_stmt(expr),
             Statement::Block(expr) => self.interpret_block(expr),
             Statement::Variable(expr) => self.interpret_var_stmt(expr),
             Statement::If(expr) => self.interpret_if_stmt(expr),
-            _ => panic!("Unimplemented statement type"),
+            Statement::While(expr) => self.interpret_while(expr),
+            _ => panic!("Unimplemented statement type: {:?}", e),
         };
     }
 
@@ -121,10 +127,22 @@ impl Interpreter {
     /// # Arguments
     ///
     /// * `e` - The expression statement to interpret.
-    pub fn interpret_expr_stmt(&self, e: Expression) {
+    pub fn interpret_expr_stmt(&mut self, e: Expression) {
         let _ = self
             .interpret_expr(e.expression)
             .expect("Failed interpreting an expression statement.");
+    }
+
+
+    /// Interprets a WHILE statement.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The while statement to interpret.
+    pub fn interpret_while(&mut self, e: While) {
+        while self.interpret_expr(e.condition.expression.clone()).expect("Failed to interpret condition of a while loop").bool_true() {
+            self.interpret_stmt(*e.body.clone())
+        }
     }
 
     /// Interprets a conditional 'If' statement..
@@ -163,19 +181,23 @@ impl Interpreter {
     /// # Returns
     ///
     /// A `Result` containing the value or an error message.
-    pub fn interpret_var(&self, e: crate::expression::Variable) -> Result {
+    pub fn interpret_var(&mut self, e: crate::expression::Variable) -> Result {
+        if let Some(init) = e.initializer {
+            let init = self.interpret_expr(*init).expect("Shouldn't fail intepreting rhs of assignemnt");
+            self.environment.borrow_mut().assign(&e.name, init)?
+        }
         self.environment.borrow().read(&e.name)
     }
 
-    pub fn interpret_var_stmt(&self, e: Variable) {
-        self.interpret_var(crate::expression::Variable { name: e.name });
+    pub fn interpret_var_stmt(&mut self, e: Variable) {
+        self.interpret_var(e);
     }
     /// Interprets a print statement and outputs the result.
     ///
     /// # Arguments
     ///
     /// * `e` - The print statement to interpret.
-    pub fn interpret_print(&self, e: Print) {
+    pub fn interpret_print(&mut self, e: Print) {
         let expr = self.interpret_expr(e.expression);
         println!("PRINTING VALUE HERE");
         println!(
@@ -189,9 +211,25 @@ impl Interpreter {
     /// # Arguments
     ///
     /// * `e` - The assignment statement to interpret.
+    pub fn interpret_assign_expression(&mut self, e: Assign) -> Result {
+        let val = self.interpret_expr(*e.value).unwrap();
+
+        let name = match e.variable.ttype {
+            TokenKind::Identifier(s) => s,
+            _ => panic!("Assignment should never have a name that is not a string"),
+        };
+        self.environment.borrow_mut().assign(&name, val.clone());
+        Ok(val)
+    }
+
+    /// Interprets an assignment statement and updates the environment.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The assignment statement to interpret.
     pub fn interpret_assignment(&mut self, e: Let) {
         let val = self.interpret_expr(e.initializer).unwrap();
-        let name = match dbg!(e.name.ttype) {
+        let name = match e.name.ttype {
             TokenKind::Identifier(s) => s,
             _ => panic!("Assignment should never have a name that is not a string"),
         };
@@ -227,7 +265,7 @@ impl Interpreter {
     /// # Returns
     ///
     /// A `Result` containing the value or an error message.
-    pub fn interpret_binary(&self, e: Binary) -> Result {
+    pub fn interpret_binary(&mut self, e: Binary) -> Result {
         let lhs = self.interpret_expr(*e.lhs)?;
         let rhs = self.interpret_expr(*e.rhs)?;
 
@@ -284,7 +322,7 @@ impl Interpreter {
     /// # Returns
     ///
     /// A `Result` containing the value or an error message.
-    fn interpret_unary(&self, e: Unary) -> Result {
+    fn interpret_unary(&mut self, e: Unary) -> Result {
         let rhs = self.interpret_expr(*e.value)?;
         let operator = e.operator;
 
@@ -300,11 +338,9 @@ impl Interpreter {
         self.environment = Rc::new(RefCell::new(Environment::new_scoped(
             self.environment.clone(),
         )));
-        for stmt in dbg!(e.statements) {
-            dbg!("Interpreting block stmts");
-            self.interpret_stmt(dbg!(stmt));
+        for stmt in e.statements {
+            self.interpret_stmt(stmt);
         }
-        dbg!("Done interpreting block stmts");
 
         self.environment = outer_environment;
     }

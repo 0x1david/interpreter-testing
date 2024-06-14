@@ -79,6 +79,9 @@ impl Parser {
     pub fn peek(&self) -> &Token {
         &self.tokens[self.current]
     }
+    pub fn peek_next(&self) -> &Token {
+        &self.tokens[self.current+1]
+    }
     /// Consumes the current token and advances to the next token.
     ///
     /// # Returns
@@ -90,7 +93,7 @@ impl Parser {
     // passed type)
     pub fn consume(&mut self) -> &Token {
         self.step();
-        let tok = dbg!(self.previous());
+        let tok = self.previous();
         tok
     }
 

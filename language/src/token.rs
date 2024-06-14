@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
-use crate::{expression::Literal, lexer::{Keyword, TokenKind}};
+use crate::{
+    expression::Literal,
+    lexer::{Keyword, TokenKind},
+};
 
 /// Represents a token in the language with its type, literal value, span, and line number.
 #[derive(Debug, Clone)]
@@ -58,6 +61,10 @@ impl Token {
         matches!(&self.ttype, TokenKind::Keyword(Keyword::Or))
     }
 
+    pub fn get_identifier(&self) -> bool {
+        matches!(&self.ttype, TokenKind::Identifier(s))
+    }
+
     /// Checks if the token represents a comparison operator.
     pub fn comparison(&self) -> bool {
         matches!(
@@ -79,5 +86,9 @@ impl Token {
     /// Checks if the token represents a unary operator (logical NOT or negation).
     pub fn unary(&self) -> bool {
         matches!(&self.ttype, TokenKind::Bang | TokenKind::Minus)
+    }
+
+    pub fn equal(&self) -> bool {
+        matches!(&self.ttype, TokenKind::Equal)
     }
 }

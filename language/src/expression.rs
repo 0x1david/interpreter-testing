@@ -3,6 +3,7 @@ use std::fmt::Display;
 use crate::{
     lexer::{Keyword, TokenKind},
     parser::Parser,
+    statement::{Expression, Statement},
     token::Token,
 };
 
@@ -12,9 +13,28 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed expression.
     pub fn parse_expression(&mut self) -> Expr {
-        dbg!("Parsing exp: ", &self.peek().ttype);
-        self.parse_and()
+        self.parse_assignment()
             .expect("After finishing, expression should be parsed")
+    }
+ 
+    /// Parses the assignment expression or any lower priority exression.
+    ///
+    /// # Returns
+    /// An `Expr` representing the parsed expression.
+    pub fn parse_assignment(&mut self) -> Option<Expr> {
+        let expression = self.parse_and();
+        if self.peek().ttype.equal() {
+            self.step();
+            let var = self.previous();
+            let value = Box::new(self.parse_assignment().expect("Assignemnt rhs expects an expression."));
+            if let Some(Expr::Variable(ref v)) = expression {
+                let name = &v.name;
+                return Some(Expr::Assign(Assign {variable: Token::new(TokenKind::Identifier(name.to_string()), None, 9999999), value}));
+            } else {
+                panic!("Invalid assignment target. Got: {:?}", expression);
+            };
+        }
+        expression
     }
 
     /// Parses the logical statement AND or any lower priority expression.
@@ -22,7 +42,6 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed and expression.
     pub fn parse_and(&mut self) -> Option<Expr> {
-        dbg!("Parsing AND: ", &self.peek().ttype);
         let mut expression = self.parse_or()?;
 
         while self.peek().and() {
@@ -30,25 +49,23 @@ impl Parser {
             let operator = self.previous().clone();
             let rhs = self.parse_or()?;
             println!("The operator at equality is {:?}", operator.ttype);
-            expression = Expr::logical(expression, operator , rhs);
+            expression = Expr::logical(expression, operator, rhs);
         }
         Some(expression)
     }
-
 
     /// Parses the logical statement OR, or any lower priority expression.
     ///
     /// # Returns
     /// An `Expr` representing the parsed OR expression.
     pub fn parse_or(&mut self) -> Option<Expr> {
-        dbg!("Parsing OR: ", &self.peek().ttype);
         let mut expression = self.parse_equality()?;
         while self.peek().or() {
             self.step();
             let operator = self.previous().clone();
             let rhs = self.parse_equality()?;
             println!("The operator at equality is {:?}", operator.ttype);
-            expression = Expr::logical(expression, operator , rhs);
+            expression = Expr::logical(expression, operator, rhs);
         }
         Some(expression)
     }
@@ -58,7 +75,6 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed equality expression.
     pub fn parse_equality(&mut self) -> Option<Expr> {
-        dbg!("Parsing eq: ", &self.peek().ttype);
         let mut expression = self.parse_comparison()?;
         while self.peek().equality() {
             self.step();
@@ -74,7 +90,6 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed comparison expression.
     pub fn parse_comparison(&mut self) -> Option<Expr> {
-        dbg!("Parsing comparsion: ", &self.peek().ttype);
         let mut expression = self.parse_term()?;
         while self.peek().comparison() {
             self.step();
@@ -90,11 +105,8 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed term expression.
     pub fn parse_term(&mut self) -> Option<Expr> {
-        dbg!("Parsing term: ", &self.peek().ttype);
         let mut expression = self.parse_factor()?;
-        dbg!("parsed at term now: ", &expression);
         while self.peek().term() {
-            dbg!("I am at term parsing now");
             self.step();
             let operator = self.previous().clone();
             let rhs = self.parse_factor()?;
@@ -107,7 +119,6 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed factor expression.
     pub fn parse_factor(&mut self) -> Option<Expr> {
-        dbg!("Parsing factor: ", self.peek());
         let mut expression = self.parse_unary()?;
         while self.peek().factor() {
             self.step();
@@ -122,7 +133,6 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed unary expression.
     pub fn parse_unary(&mut self) -> Option<Expr> {
-        dbg!("Parsing unary: ", &self.peek().ttype);
         if self.peek().unary() {
             self.step();
             let operator = match self.previous().ttype {
@@ -145,7 +155,6 @@ impl Parser {
     /// Panics if an invalid primary expression is encountered.
     // TODO: This code is hideous and duplicative, so rewrite later
     pub fn parse_primary(&mut self) -> Option<Expr> {
-        dbg!("Parsing primary {}", &self.peek().ttype);
         if let Some(kw) = self.token_type().keyword() {
             match kw {
                 Keyword::True => {
@@ -164,7 +173,6 @@ impl Parser {
             }
         };
         if let Some(i) = self.token_type().integer() {
-            dbg!("REturning an integer");
             self.step();
             return Some(Expr::literal(Object::Integer(i)));
         };
@@ -226,6 +234,14 @@ impl Display for Expr {
 }
 
 impl Expr {
+    pub fn len(&self) -> Option<usize> {
+        match self {
+            Expr::Variable(val) => Some(val.name.len()),
+            Expr::Literal(Literal { value }) => Some(value.len()),
+            _ => None,
+        }
+    }
+
     /// Creates a new binary expression.
     ///
     /// # Arguments
@@ -361,6 +377,16 @@ impl Expr {
         let l = Literal { value };
         Self::Literal(l)
     }
+
+    /// Converts an expression to an Expression struct (used in expression stmts).
+    ///
+    /// # Returns
+    ///
+    /// A new `Statement::Expr::Logical` instance.
+    pub fn wrap_expression(self) -> Expression {
+        Expression { expression: self }
+    }
+
     /// Creates a new logical expression.
     ///
     /// # Arguments
@@ -439,6 +465,7 @@ impl Expr {
     fn variable(name: String) -> Self {
         let v = Variable {
             name: name.to_string(),
+            initializer: None
         };
         Self::Variable(v)
     }
@@ -584,6 +611,7 @@ impl Display for This {
 #[derive(Debug, Clone)]
 pub struct Variable {
     pub name: String,
+    pub initializer: Option<Box<Expr>>
 }
 
 impl Display for Variable {
@@ -593,8 +621,6 @@ impl Display for Variable {
 }
 
 #[derive(Debug, Clone)]
-pub enum Statement {}
-#[derive(Debug, Clone)]
 pub enum Object {
     True,
     False,
@@ -602,6 +628,15 @@ pub enum Object {
     Integer(i64),
     Float(f64),
     String(String),
+}
+
+impl Object {
+    pub fn len(&self) -> usize {
+        match self {
+            Object::String(s) => s.len(),
+            _ => panic!("Type has no len"),
+        }
+    }
 }
 
 impl Display for Object {

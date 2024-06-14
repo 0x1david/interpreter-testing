@@ -28,16 +28,20 @@ fn main() {
     // );
     let mut lexer = Lexer::new(
         r#"
-        let strx = "apple";
-        if strx == "apple" and False{
-            print "if branch";
-        } elif strx == "pineapple" {
-            print "first elif branch";
-        } elif strx == "pear" {
-            print "second elif branch";
-        } else {
-            print "else branch";
+        //let n = 0;
+        for (let x = 0; x < 4; x = x + 1) {
+            print x;
         }
+        // let strx = "apple";
+        // if strx == "apple" and False{
+        //     print "if branch";
+        // } elif strx == "pineapple" {
+        //     print "first elif branch";
+        // } elif strx == "pear" {
+        //     print "second elif branch";
+        // } else {
+        //     print "else branch";
+        // }
         // let foo = 1;
         // let bar = 2;
         // print strx;
