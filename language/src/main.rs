@@ -28,33 +28,29 @@ fn main() {
     // );
     let mut lexer = Lexer::new(
         r#"
-        let strx = "neither";
-        let foo = 1;
-        let bar = 2;
-        let baz = 3;
-        let bax = 4;
-        if strx == "string" {
-            print foo;
-        } elif strx == "apple" {
-            print bar;
+        let strx = "apple";
+        if strx == "apple" and False{
+            print "if branch";
+        } elif strx == "pineapple" {
+            print "first elif branch";
         } elif strx == "pear" {
-            print baz;
+            print "second elif branch";
         } else {
-            print bax;
+            print "else branch";
         }
-        let foo = 1;
-        let bar = 2;
-        print strx;
-        {
-            print foo;
-            let bar = 4;
-            print bar;
-            {
-                let baz = 893;
-            }
-            print bar;
-        }
-        print foo;
+        // let foo = 1;
+        // let bar = 2;
+        // print strx;
+        // {
+        //     print foo;
+        //     let bar = 4;
+        //     print bar;
+        //     {
+        //         let baz = 893;
+        //     }
+        //     print bar;
+        // }
+        // print foo;
         "#,
     );
     lexer.scan_tokens();

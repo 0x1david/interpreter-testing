@@ -2,7 +2,7 @@ use std::{cell::RefCell, fmt::Display, ops::Neg, rc::Rc};
 
 use crate::{
     environment::Environment,
-    expression::{Binary, BinaryOpToken, Expr, Literal, Object, Unary, UnaryOpToken},
+    expression::{Binary, BinaryOpToken, Expr, Literal, Logical, Object, Unary, UnaryOpToken},
     lexer::TokenKind,
     statement::{Block, Expression, If, Let, Print, Statement, Variable},
 };
@@ -70,12 +70,33 @@ impl Interpreter {
     pub fn interpret_expr(&self, e: Expr) -> std::result::Result<Value, String> {
         let value = match e {
             Expr::Literal(expr) => self.interpret_literal(expr),
+            Expr::Logical(expr) => self.interpret_logical(expr)?,
             Expr::Binary(expr) => self.interpret_binary(expr)?,
             Expr::Unary(expr) => self.interpret_unary(expr)?,
             Expr::Variable(expr) => self.interpret_var(expr)?,
             _ => return Err("Unimplemented expression type".to_string()),
         };
         Ok(value)
+    }
+
+    /// Interprets a logical expression and returns the resulting boolean value or an error.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The logical to interpret.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the value or an error message.
+    pub fn interpret_logical(&self, e: Logical) -> std::result::Result<Value, String> {
+        let value = if e.operator.and() {
+            self.interpret_expr(*e.lhs).unwrap().bool_true() && self.interpret_expr(*e.rhs).unwrap().bool_true()
+        } else if e.operator.or() {
+            self.interpret_expr(*e.lhs).unwrap().bool_true() || self.interpret_expr(*e.rhs).unwrap().bool_true()
+        } else {
+            panic!("Only the logical operators (AND, OR) exist")
+        };
+        Ok(Value::Bool(value))
     }
 
     /// Interprets a statement and executes it.

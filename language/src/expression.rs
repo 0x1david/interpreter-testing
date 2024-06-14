@@ -13,9 +13,46 @@ impl Parser {
     /// An `Expr` representing the parsed expression.
     pub fn parse_expression(&mut self) -> Expr {
         dbg!("Parsing exp: ", &self.peek().ttype);
-        self.parse_equality()
+        self.parse_and()
             .expect("After finishing, expression should be parsed")
     }
+
+    /// Parses the logical statement AND or any lower priority expression.
+    ///
+    /// # Returns
+    /// An `Expr` representing the parsed and expression.
+    pub fn parse_and(&mut self) -> Option<Expr> {
+        dbg!("Parsing AND: ", &self.peek().ttype);
+        let mut expression = self.parse_or()?;
+
+        while self.peek().and() {
+            self.step();
+            let operator = self.previous().clone();
+            let rhs = self.parse_or()?;
+            println!("The operator at equality is {:?}", operator.ttype);
+            expression = Expr::logical(expression, operator , rhs);
+        }
+        Some(expression)
+    }
+
+
+    /// Parses the logical statement OR, or any lower priority expression.
+    ///
+    /// # Returns
+    /// An `Expr` representing the parsed OR expression.
+    pub fn parse_or(&mut self) -> Option<Expr> {
+        dbg!("Parsing OR: ", &self.peek().ttype);
+        let mut expression = self.parse_equality()?;
+        while self.peek().or() {
+            self.step();
+            let operator = self.previous().clone();
+            let rhs = self.parse_equality()?;
+            println!("The operator at equality is {:?}", operator.ttype);
+            expression = Expr::logical(expression, operator , rhs);
+        }
+        Some(expression)
+    }
+
     /// Parses equality expressions (`==`, `!=`) or any lower priority expression.
     ///
     /// # Returns

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{expression::Literal, lexer::TokenKind};
+use crate::{expression::Literal, lexer::{Keyword, TokenKind}};
 
 /// Represents a token in the language with its type, literal value, span, and line number.
 #[derive(Debug, Clone)]
@@ -48,6 +48,14 @@ impl Token {
     /// Checks if the token represents an equality operator.
     pub fn equality(&self) -> bool {
         matches!(&self.ttype, TokenKind::EqualEqual | TokenKind::BangEqual)
+    }
+
+    pub fn and(&self) -> bool {
+        matches!(&self.ttype, TokenKind::Keyword(Keyword::And))
+    }
+
+    pub fn or(&self) -> bool {
+        matches!(&self.ttype, TokenKind::Keyword(Keyword::Or))
     }
 
     /// Checks if the token represents a comparison operator.
