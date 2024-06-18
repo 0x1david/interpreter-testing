@@ -3,7 +3,7 @@ use std::{cell::RefCell, fmt::Display, ops::Neg, rc::Rc};
 use crate::{
     environment::Environment,
     expression::{
-        Assign, Binary, BinaryOpToken, Expr, Literal, Logical, Object, Unary, UnaryOpToken, Variable
+        Assign, Binary, BinaryOpToken, Call, Expr, Literal, Logical, Object, Unary, UnaryOpToken, Variable
     },
     lexer::TokenKind,
     statement::{Block, Expression, If, Let, Print, Statement, While},
@@ -133,6 +133,20 @@ impl Interpreter {
             .expect("Failed interpreting an expression statement.");
     }
 
+    /// Interprets a function call.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The function call to interpret.
+    pub fn interpret_call_expr(&mut self, e: Call) -> Result {
+        let callee = self.interpret_expr(*e.callee);
+        let mut args = vec![];
+
+        e.arguments.into_iter().for_each(|arg| {
+            args.push(self.interpret_expr(arg))
+        });
+        
+    }
 
     /// Interprets a WHILE statement.
     ///

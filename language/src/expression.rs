@@ -143,8 +143,43 @@ impl Parser {
             let rhs = self.parse_unary()?;
             return Some(Expr::unary(operator, rhs));
         }
-        self.parse_primary()
+        self.parse_func_call()
     }
+
+    /// Parses a function call or any lower priority expression.
+    ///
+    /// # Returns
+    /// An `Expr` representing the parsed unary expression.
+    pub fn parse_func_call(&mut self) -> Option<Expr> {
+        let expr = self.parse_primary();
+
+        let mut args = vec![];
+
+        if !self.peek().ttype.left_paren() {
+            return expr
+        } 
+
+        let expr = expr.expect("A function must have a callee");
+        self.step();
+
+        if !self.peek().ttype.right_paren() {
+            loop {
+                args.push(self.parse_expression());
+                if !self.peek().ttype.comma() {
+                    break
+                }
+                self.step()
+            };
+        }
+        if !(self.consume().ttype == TokenKind::RightParen) {
+            panic!("Expected a right parenthesis after the arguments of a function call, got: {:?}.", &self.peek().ttype)
+        }
+        if args.len() > 255 {
+            panic!("A function call can't have more than 255 arguments.")
+        }
+        Some(Expr::call(expr, self.consume().clone(), args))
+    }
+
     /// Parses primary expressions (literals, grouped expressions, identifiers) or any lower
     /// priority expressions.
     ///

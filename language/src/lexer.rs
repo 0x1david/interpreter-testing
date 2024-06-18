@@ -400,6 +400,9 @@ impl TokenKind {
     pub fn equal(&self) -> bool {
         matches!(self, TokenKind::Equal)
     }
+    pub fn comma(&self) -> bool {
+        matches!(self, TokenKind::Comma)
+    }
 }
 
 #[cfg(test)]
