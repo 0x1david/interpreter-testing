@@ -151,15 +151,22 @@ impl Parser {
     /// # Returns
     /// An `Expr` representing the parsed unary expression.
     pub fn parse_func_call(&mut self) -> Option<Expr> {
-        let expr = self.parse_primary();
+        let mut expr = self.parse_primary();
 
+        loop {
+            if self.peek().ttype.left_paren()  {
+                expr = Some(self.finish_call(expr?))
+            } else {
+                break
+            }
+        };
+
+        expr
+    }
+    
+    pub fn finish_call(&mut self, callee: Expr) -> Expr {
         let mut args = vec![];
 
-        if !self.peek().ttype.left_paren() {
-            return expr
-        } 
-
-        let expr = expr.expect("A function must have a callee");
         self.step();
 
         if !self.peek().ttype.right_paren() {
@@ -168,7 +175,7 @@ impl Parser {
                 if !self.peek().ttype.comma() {
                     break
                 }
-                self.step()
+                // self.step() // TODO IS THIS STEP NEEDED?
             };
         }
         if !(self.consume().ttype == TokenKind::RightParen) {
@@ -177,7 +184,7 @@ impl Parser {
         if args.len() > 255 {
             panic!("A function call can't have more than 255 arguments.")
         }
-        Some(Expr::call(expr, self.consume().clone(), args))
+        Expr::call(callee, self.consume().clone(), args)
     }
 
     /// Parses primary expressions (literals, grouped expressions, identifiers) or any lower

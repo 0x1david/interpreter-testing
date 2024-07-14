@@ -22,10 +22,32 @@ pub enum Value {
 }
 
 impl Value {
+    /// If the value is a boolean, return it's semantic value
     pub fn bool_true(&self) -> bool {
         match self {
             Self::Bool(b) => *b,
             _ => false,
+        }
+    }
+    /// Calls the function, if applicable, if the type isn't callable, panics.
+    pub fn call(&self) -> Value {
+        match self {
+            Self::String(_) => panic!("Call on an object that is not callable -> 'String'"),
+            Self::Integer(_) => panic!("Call on an object that is not callable -> 'Integer'"),
+            Self::Bool(_) => panic!("Call on an object that is not callable -> 'Bool'"),
+            Self::Float(_) => panic!("Call on an object that is not callable -> 'Float'"),
+            Self::Nil => panic!("Call on an object that is not callable -> 'Nil'")
+        }
+    }
+    /// Returns the expected number of arguments for the function, if applicable, if the type doesn't
+    /// have an arity, panics.
+    pub fn arity(&self) -> usize {
+        match self {
+            Self::String(_) => panic!("Arity on an object that is not callable -> 'String'"),
+            Self::Integer(_) => panic!("Arity on an object that is not callable -> 'Integer'"),
+            Self::Bool(_) => panic!("Arity on an object that is not callable -> 'Bool'"),
+            Self::Float(_) => panic!("Arity on an object that is not callable -> 'Float'"),
+            Self::Nil => panic!("Arity on an object that is not callable -> 'Nil'")
         }
     }
 }
@@ -70,16 +92,16 @@ impl Interpreter {
     ///
     /// A `Result` containing the value or an error message.
     pub fn interpret_expr(&mut self, e: Expr) -> std::result::Result<Value, String> {
-        let value = match e {
-            Expr::Literal(expr) => self.interpret_literal(expr),
-            Expr::Logical(expr) => self.interpret_logical(expr)?,
-            Expr::Binary(expr) => self.interpret_binary(expr)?,
-            Expr::Unary(expr) => self.interpret_unary(expr)?,
-            Expr::Variable(expr) => self.interpret_var(expr)?,
-            Expr::Assign(expr) => self.interpret_assign_expression(expr)?,
+        match e {
+            Expr::Literal(expr) => Ok(self.interpret_literal(expr)),
+            Expr::Logical(expr) => self.interpret_logical(expr),
+            Expr::Call(expr) => self.interpret_call_expr(expr),
+            Expr::Binary(expr) => self.interpret_binary(expr),
+            Expr::Unary(expr) => self.interpret_unary(expr),
+            Expr::Variable(expr) => self.interpret_var(expr),
+            Expr::Assign(expr) => self.interpret_assign_expression(expr),
             _ => return Err(format!("Unimplemented expression type: {:?}", e)),
-        };
-        Ok(value)
+        }
     }
 
     /// Interprets a logical expression and returns the resulting boolean value or an error.
@@ -139,12 +161,17 @@ impl Interpreter {
     ///
     /// * `e` - The function call to interpret.
     pub fn interpret_call_expr(&mut self, e: Call) -> Result {
-        let callee = self.interpret_expr(*e.callee);
+        let callee = self.interpret_expr(*e.callee).expect("Callee not being valid should have been found earlier in compilation.");
         let mut args = vec![];
 
-        e.arguments.into_iter().for_each(|arg| {
+        for arg in e.arguments {
             args.push(self.interpret_expr(arg))
-        });
+        };
+
+        if (args.len() != callee.arity()) {
+            panic!("Function expected '{}' arguments, but got '{}'.", callee.arity(), args.len())
+        }
+        Ok(callee.call())
         
     }
 
