@@ -6,6 +6,7 @@ mod expression;
 mod interpreter;
 mod lexer;
 mod parser;
+mod callable;
 mod statement;
 mod token;
 

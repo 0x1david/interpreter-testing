@@ -52,9 +52,6 @@ impl Parser {
     ///
     /// # Arguments
     /// * `expr` - The expression to be added.
-    pub fn add_expression(&mut self, expr: Expr) {
-        self.add_statement(Statement::Expression(Expression { expression: expr }))
-    }
 
     /// Adds a statement to the list of statements.
     ///

@@ -1,7 +1,9 @@
 use crate::expression::{Binary, BinaryOpToken, Expr, Literal, Object, Variable};
+use crate::interpreter::{Interpreter, Value};
 use crate::lexer::{Keyword, TokenKind};
 use crate::parser::Parser;
 use crate::token::Token;
+use crate::callable::Callable;
 
 /// Represents different kinds of statements in the language.
 #[derive(Debug, Clone)]

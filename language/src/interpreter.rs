@@ -1,12 +1,9 @@
 use std::{cell::RefCell, fmt::Display, ops::Neg, rc::Rc};
 
 use crate::{
-    environment::Environment,
-    expression::{
+    callable::Callable, environment::Environment, expression::{
         Assign, Binary, BinaryOpToken, Call, Expr, Literal, Logical, Object, Unary, UnaryOpToken, Variable
-    },
-    lexer::TokenKind,
-    statement::{Block, Expression, If, Let, Print, Statement, While},
+    }, lexer::TokenKind, statement::{Block, Expression, Function, If, Let, Print, Statement, While}
 };
 
 type Result = std::result::Result<Value, String>;
@@ -19,6 +16,30 @@ pub enum Value {
     Float(f64),
     Nil,
     Bool(bool),
+    Function {
+        args: Function
+    },
+}
+fn function_call(args: &Vec<Value>) -> Value {
+
+}
+
+impl Callable for Value {
+    pub fn call(&self, interpreter: &mut Interpreter) -> Result {
+        match self {
+            Self::Function{args: args} => {
+                if args.len() != 
+                Ok(function_call(args))
+            }
+            Self::String(_) => Err("Cannot call on a String.".to_string()),
+            Self::Integer(_) => Err("Cannot call on an Integer.".to_string()),
+            Self::Float(_) => Err("Cannot call on a Float value.".to_string()),
+            Self::Nil => Err("Cannot call on an Nil value.".to_string()),
+            Self::Bool(_) => Err("Cannot call on a Boolean value.".to_string()),
+        }
+    }
+    pub fn arity(&self, interpreter: &mut Interpreter) -> std::prelude::v1::Result<u8, String> {
+    }
 }
 
 impl Value {
@@ -145,7 +166,7 @@ impl Interpreter {
         e.arguments.into_iter().for_each(|arg| {
             args.push(self.interpret_expr(arg))
         });
-        
+
     }
 
     /// Interprets a WHILE statement.
