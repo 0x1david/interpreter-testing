@@ -6,10 +6,24 @@ use crate::{
         Assign, Binary, BinaryOpToken, Call, Expr, Literal, Logical, Object, Unary, UnaryOpToken, Variable
     },
     lexer::TokenKind,
-    statement::{Block, Expression, If, Let, Print, Statement, While},
+    statement::{Block, Expression, If, Function, Let, Print, Statement, While},
 };
 
 type Result = std::result::Result<Value, String>;
+
+
+impl Function {
+    pub fn call(&self, interpreter: &mut Interpreter, args: Vec<Value>) -> Option<Value> {
+        let mut func_env = Environment::new();
+        for (name, arg) in self.params.into_iter().zip(args) {
+            func_env.define(name.to_string(), arg)
+        }
+        interpreter.interpret_block( Block { statements: self.body }, Some(func_env));
+        None
+    }
+}
+
+
 
 /// Represents the possible values that can be stored in the interpreter's environment.
 #[derive(Clone)]
@@ -19,6 +33,7 @@ pub enum Value {
     Float(f64),
     Nil,
     Bool(bool),
+    Function(Function)
 }
 
 impl Value {
@@ -30,13 +45,14 @@ impl Value {
         }
     }
     /// Calls the function, if applicable, if the type isn't callable, panics.
-    pub fn call(&self) -> Value {
+    pub fn call(&self, interpreter: &mut Interpreter, args: Vec<Value>) -> Option<Value> {
         match self {
             Self::String(_) => panic!("Call on an object that is not callable -> 'String'"),
             Self::Integer(_) => panic!("Call on an object that is not callable -> 'Integer'"),
             Self::Bool(_) => panic!("Call on an object that is not callable -> 'Bool'"),
             Self::Float(_) => panic!("Call on an object that is not callable -> 'Float'"),
-            Self::Nil => panic!("Call on an object that is not callable -> 'Nil'")
+            Self::Nil => panic!("Call on an object that is not callable -> 'Nil'"),
+            Self::Function(f) => f.call(interpreter, args)
         }
     }
     /// Returns the expected number of arguments for the function, if applicable, if the type doesn't
@@ -47,7 +63,8 @@ impl Value {
             Self::Integer(_) => panic!("Arity on an object that is not callable -> 'Integer'"),
             Self::Bool(_) => panic!("Arity on an object that is not callable -> 'Bool'"),
             Self::Float(_) => panic!("Arity on an object that is not callable -> 'Float'"),
-            Self::Nil => panic!("Arity on an object that is not callable -> 'Nil'")
+            Self::Nil => panic!("Arity on an object that is not callable -> 'Nil'"),
+            Self::Function(f) => f.params.len()
         }
     }
 }
@@ -60,6 +77,7 @@ impl Display for Value {
             Self::Float(n) => write!(f, "Float: {}", n),
             Self::Nil => write!(f, "Nil"),
             Self::Bool(b) => write!(f, "Bool: {}", b),
+            Self::Function(b) => write!(f, "Function: {:?}", b),
         }
     }
 }
@@ -67,13 +85,16 @@ impl Display for Value {
 /// The main interpreter struct that holds the environment and interprets expressions and statements.
 pub struct Interpreter {
     pub environment: Rc<RefCell<Environment>>,
+    pub globals: Environment,
 }
 
 impl Interpreter {
     /// Creates a new Interpreter instance with an empty environment.
     pub fn new() -> Self {
+        let globals = Environment::new();
         Self {
             environment: Rc::new(RefCell::new(Environment::new())),
+            globals: Environment::new(),
         }
     }
 
@@ -136,7 +157,7 @@ impl Interpreter {
             Statement::Let(stmt) => self.interpret_assignment(stmt),
             Statement::Print(stmt) => self.interpret_print(stmt),
             Statement::Expression(expr) => self.interpret_expr_stmt(expr),
-            Statement::Block(expr) => self.interpret_block(expr),
+            Statement::Block(expr) => self.interpret_block(expr, None),
             Statement::Variable(expr) => self.interpret_var_stmt(expr),
             Statement::If(expr) => self.interpret_if_stmt(expr),
             Statement::While(expr) => self.interpret_while(expr),
@@ -165,13 +186,13 @@ impl Interpreter {
         let mut args = vec![];
 
         for arg in e.arguments {
-            args.push(self.interpret_expr(arg))
+            args.push(self.interpret_expr(arg).expect("Args must be parsed correctly for the program to proceed."))
         };
 
         if (args.len() != callee.arity()) {
             panic!("Function expected '{}' arguments, but got '{}'.", callee.arity(), args.len())
         }
-        Ok(callee.call())
+        callee.call(self, args).ok_or("Function doesn't return".to_string())
         
     }
 
@@ -374,11 +395,17 @@ impl Interpreter {
         }
     }
 
-    fn interpret_block(&mut self, e: Block) {
+    fn interpret_block(&mut self, e: Block, func_env: Option<Environment>) {
         let outer_environment = self.environment.clone();
-        self.environment = Rc::new(RefCell::new(Environment::new_scoped(
-            self.environment.clone(),
-        )));
+
+        let new_env = if let Some(env) = func_env {
+            env
+        } else {
+            Environment::new_scoped(outer_environment)
+        };
+
+        self.environment = Rc::new(RefCell::new(new_env));
+
         for stmt in e.statements {
             self.interpret_stmt(stmt);
         }

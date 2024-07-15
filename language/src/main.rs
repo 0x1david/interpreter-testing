@@ -8,6 +8,7 @@ mod lexer;
 mod parser;
 mod statement;
 mod token;
+mod globals;
 
 use lexer::Lexer;
 use parser::Parser;
