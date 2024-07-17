@@ -15,10 +15,10 @@ type Result = std::result::Result<Value, String>;
 impl Function {
     pub fn call(&self, interpreter: &mut Interpreter, args: Vec<Value>) -> Option<Value> {
         let mut func_env = Environment::new();
-        for (name, arg) in self.params.into_iter().zip(args) {
+        for (name, arg) in self.params.iter().zip(args) {
             func_env.define(name.to_string(), arg)
         }
-        interpreter.interpret_block( Block { statements: self.body }, Some(func_env));
+        interpreter.interpret_block( Block { statements: self.body.clone() }, Some(func_env));
         None
     }
 }
@@ -401,7 +401,7 @@ impl Interpreter {
         let new_env = if let Some(env) = func_env {
             env
         } else {
-            Environment::new_scoped(outer_environment)
+            Environment::new_scoped(outer_environment.clone())
         };
 
         self.environment = Rc::new(RefCell::new(new_env));

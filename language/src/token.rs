@@ -61,8 +61,17 @@ impl Token {
         matches!(&self.ttype, TokenKind::Keyword(Keyword::Or))
     }
 
-    pub fn get_identifier(&self) -> bool {
+    pub fn identifier(&self) -> bool {
         matches!(&self.ttype, TokenKind::Identifier(s))
+    }
+
+    pub fn get_identifier(&self) -> Option<String> {
+
+        if matches!(&self.ttype, TokenKind::Identifier(s)) {
+            Some(self.to_string())
+        } else {
+            None
+        }
     }
 
     /// Checks if the token represents a comparison operator.

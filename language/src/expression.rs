@@ -224,7 +224,7 @@ impl Parser {
             return Some(Expr::literal(Object::Float(f)));
         };
 
-        if let Some(ident) = self.token_type().identifier() {
+        if let Some(ident) = self.token_type().get_identifier() {
             let ident_copy = ident.to_string();
             self.step();
             return Some(Expr::variable(ident_copy));

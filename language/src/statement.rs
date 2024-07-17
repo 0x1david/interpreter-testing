@@ -10,7 +10,6 @@ pub enum Statement {
     Struct(Struct),
     Expression(Expression),
     Procedure(Procedure),
-    Function(Function),
     If(If),
     Print(Print),
     Return(Return),
@@ -25,6 +24,12 @@ impl Statement {
         match self {
             Self::Expression(e) => e.expression,
             _ => panic!("Doesn't contain inner expression.")
+        }
+    }
+    pub fn get_inner_block(&self) -> Vec<Statement>{
+        match self {
+            Self::Block(b) => b.statements.clone(),
+            _ => panic!("Isn't a block .")
         }
     }
 }
@@ -48,9 +53,10 @@ impl Parser {
                 Keyword::If => self.parse_if(),
                 Keyword::While => self.parse_while(),
                 Keyword::For => self.parse_for(),
+                Keyword::Proc => self.parse_proc(),
                 _ => unimplemented!(),
             }
-        } else if let Some(ident) = tokenkind.identifier() {
+        } else if let Some(ident) = tokenkind.get_identifier() {
             self.parse_variable_declaration(ident.to_string())
         } else if tokenkind.left_brace() {
             self.parse_block()
@@ -153,6 +159,10 @@ impl Parser {
         Some(Statement::Block(Block { statements }))
     }
 
+    fn parse_function(&mut self) {
+
+    }
+
     /// Parses a print statement and returns an optional `Statement`.
     fn parse_if(&mut self) -> Option<Statement> {
         let cond = self.parse_expression();
@@ -212,6 +222,53 @@ impl Parser {
         }))
     }
 
+    /// Parser procedure definition and returns an optional statement
+    fn parse_proc(&mut self) -> Option<Statement> {
+        let mut params = vec![];
+        let name = self.consume().clone();
+        if !name.identifier() {
+            panic!("Function name should be an identifier.");
+        }
+        if !self.consume().ttype.left_paren() {
+            panic!("Expected a left parenthesis after the function identifier in a definition");
+        }
+
+        let mut param_name;
+        if !self.consume().ttype.right_paren() {
+            loop {
+                if params.len() >= 255 {
+                    panic!("Can't have more than 255 parameters.")
+                }
+                param_name = self.consume();
+
+                if !param_name.ttype.identifier() {
+                    panic!("Expected parameter name.")
+                }
+                params.push(param_name.clone());
+
+                if self.peek().ttype.right_paren() {
+                    self.consume();
+                    break;
+                }
+
+                if !self.consume().ttype.comma() {
+                    panic!("Expected ',' or ')' after parameter.");
+                }
+                    }
+                }
+        if ! self.consume().ttype.left_brace() {
+            let e = r#"Expected '{' before a function body"#;
+            panic!("{}", e);
+        }
+        let body = self.parse_block().expect("Expected whole body definition in function declaration").get_inner_block();
+        
+        Some(Statement::Procedure(Procedure {
+            name: name.clone(), 
+            params,
+            body
+        }))
+    }
+
     /// Parses a block and returns an optional `Statement`.
     fn parse_block(&mut self) -> Option<Statement> {
         let mut stmts = vec![];
@@ -221,7 +278,6 @@ impl Parser {
                     .expect("Found something else than a statement in a block."),
             );
         }
-        println!("PREV: {:?}, CURR: {:?}", self.previous().ttype, self.peek().ttype);
 
 
         if self.peek().ttype.right_brace() {

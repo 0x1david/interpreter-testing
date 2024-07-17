@@ -364,9 +364,12 @@ impl TokenKind {
             _ => None,
         }
     }
-    pub fn identifier(&self) -> Option<&str> {
+    pub fn identifier(&self) -> bool {
+        matches!(self, TokenKind::Identifier(_))
+    }
+    pub fn get_identifier(&self) -> Option<&str>{
         match self {
-            TokenKind::Identifier(id) => Some(id),
+            TokenKind::Identifier(i) => Some(i),
             _ => None,
         }
     }
